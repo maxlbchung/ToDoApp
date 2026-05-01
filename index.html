@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Tasks | Productivity Reimagined</title>
+    <meta name="description" content="A premium productivity app with Kanban board and Calendar views.">
+    <link rel="stylesheet" href="style.css?v=1.0.1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i data-lucide="zap" class="logo-icon"></i>
+                <span>Aether</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-view="home">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li data-view="items">
+                    <i data-lucide="columns-3"></i>
+                    <span>Board</span>
+                </li>
+                <li data-view="calendar">
+                    <i data-lucide="calendar"></i>
+                    <span>Calendar</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="new-task-btn" class="btn-primary">
+                    <i data-lucide="plus"></i>
+                    <span>New Task</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Home View -->
+            <section id="home-view" class="view active">
+                <header class="view-header">
+                    <h1>Welcome back, <span id="user-name">User</span></h1>
+                    <p class="subtitle">Here's what's happening today.</p>
+                </header>
+                
+                <div class="stats-grid">
+                    <div class="stat-card glass">
+                        <div class="stat-icon todo"><i data-lucide="list-todo"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-todo">0</h3>
+                            <p>To Do</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass">
+                        <div class="stat-icon doing"><i data-lucide="play-circle"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-doing">0</h3>
+                            <p>In Progress</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass">
+                        <div class="stat-icon done"><i data-lucide="check-circle-2"></i></div>
+                        <div class="stat-info">
+                            <h3 id="stat-done">0</h3>
+                            <p>Completed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-sections">
+                    <div class="due-soon glass">
+                        <h2>Due Soon</h2>
+                        <div id="due-soon-list" class="task-list-minimal">
+                            <!-- Tasks injected here -->
+                        </div>
+                    </div>
+                    <div class="overdue-alerts glass">
+                        <h2>Immediate Attention</h2>
+                        <div id="overdue-list" class="task-list-minimal">
+                            <!-- Overdue tasks injected here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Item View (Kanban) -->
+            <section id="items-view" class="view">
+                <header class="view-header">
+                    <h1>Task Board</h1>
+                    <div class="board-actions">
+                        <!-- Search/Filter could go here -->
+                    </div>
+                </header>
+                
+                <div class="kanban-board">
+                    <div class="kanban-column" data-status="todo">
+                        <div class="column-header">
+                            <h3>To Do</h3>
+                            <span class="task-count">0</span>
+                        </div>
+                        <div class="task-container" id="todo-container"></div>
+                    </div>
+                    <div class="kanban-column" data-status="doing">
+                        <div class="column-header">
+                            <h3>Doing</h3>
+                            <span class="task-count">0</span>
+                        </div>
+                        <div class="task-container" id="doing-container"></div>
+                    </div>
+                    <div class="kanban-column" data-status="done">
+                        <div class="column-header">
+                            <h3>Done</h3>
+                            <span class="task-count">0</span>
+                        </div>
+                        <div class="task-container" id="done-container"></div>
+                    </div>
+                    <div class="kanban-column trash-column" data-status="delete">
+                        <div class="column-header">
+                            <h3>Trash</h3>
+                            <i data-lucide="trash-2"></i>
+                        </div>
+                        <div class="task-container" id="delete-container"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Calendar View -->
+            <section id="calendar-view" class="view">
+                <header class="view-header">
+                    <div class="calendar-nav">
+                        <h1 id="calendar-month-year">May 2026</h1>
+                        <div class="nav-btns">
+                            <button id="prev-month" class="btn-icon"><i data-lucide="chevron-left"></i></button>
+                            <button id="next-month" class="btn-icon"><i data-lucide="chevron-right"></i></button>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="calendar-container glass">
+                    <div class="calendar-weekdays">
+                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                    </div>
+                    <div id="calendar-days" class="calendar-grid">
+                        <!-- Days injected here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Task Modal -->
+    <div id="task-modal" class="modal-overlay">
+        <div class="modal-content glass">
+            <header class="modal-header">
+                <h2 id="modal-title-text">Create Task</h2>
+                <button class="close-modal btn-icon"><i data-lucide="x"></i></button>
+            </header>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="form-group">
+                    <label for="task-title">Title</label>
+                    <input type="text" id="task-title" required placeholder="What needs to be done?">
+                </div>
+                <div class="form-group">
+                    <label for="task-desc">Description</label>
+                    <textarea id="task-desc" rows="3" placeholder="Add some details..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="task-date">Due Date & Time</label>
+                        <div class="date-input-wrapper">
+                            <input type="datetime-local" id="task-date" required>
+                            <button type="button" id="set-today-btn" class="btn-secondary btn-sm">Today</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Color Tag</label>
+                        <div class="color-presets">
+                            <label class="color-option">
+                                <input type="radio" name="task-color" value="var(--accent-purple)" checked>
+                                <span style="background: var(--accent-purple)"></span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="task-color" value="var(--accent-blue)">
+                                <span style="background: var(--accent-blue)"></span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="task-color" value="var(--accent-cyan)">
+                                <span style="background: var(--accent-cyan)"></span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="task-color" value="var(--accent-pink)">
+                                <span style="background: var(--accent-pink)"></span>
+                            </label>
+                            <label class="color-option">
+                                <input type="radio" name="task-color" value="var(--accent-orange)">
+                                <span style="background: var(--accent-orange)"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <footer class="modal-footer">
+                    <button type="button" class="btn-secondary close-modal">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Task</button>
+                </footer>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
