@@ -819,20 +819,9 @@ input:focus, textarea:focus {
     /* Main Content */
     .main-content {
         padding: 1.25rem 1rem;
-        padding-bottom: calc(100px + env(safe-area-inset-bottom));
+        padding-bottom: calc(170px + env(safe-area-inset-bottom));
         overflow-y: visible;
         width: 100%;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Let the active view fill the main-content so footers can pin to the bottom */
-    .view.active {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
     }
 
     .view-header { margin-bottom: 1.5rem; }
@@ -890,10 +879,18 @@ input:focus, textarea:focus {
         scroll-snap-align: start;
     }
 
-    /* Board footer on mobile: anchored to bottom of the view */
+    /* Board footer pulled out of the work area into its own fixed segment,
+       sitting just above the bottom nav like a secondary toolbar. */
     .board-footer {
-        margin-top: auto;
-        padding-top: 1rem;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: calc(62px + env(safe-area-inset-bottom));
+        z-index: 90;
+        margin: 0;
+        padding: 0.6rem 0.75rem;
+        background: var(--bg-sidebar);
+        border-top: 1px solid var(--glass-border);
         gap: 0.6rem;
         align-items: stretch;
         flex-shrink: 0;
@@ -1083,5 +1080,6 @@ input:focus, textarea:focus {
     .sidebar-footer { bottom: calc(64px + env(safe-area-inset-bottom)); }
     .sidebar-footer .btn-primary { width: 48px; height: 48px; }
 
-    .main-content { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+    .main-content { padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
+    .board-footer { bottom: calc(54px + env(safe-area-inset-bottom)); }
 }
