@@ -822,6 +822,17 @@ input:focus, textarea:focus {
         padding-bottom: calc(100px + env(safe-area-inset-bottom));
         overflow-y: visible;
         width: 100%;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Let the active view fill the main-content so footers can pin to the bottom */
+    .view.active {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
     }
 
     .view-header { margin-bottom: 1.5rem; }
@@ -858,7 +869,7 @@ input:focus, textarea:focus {
     .task-card-minimal { padding: 0.85rem; }
     .task-card-minimal:hover { transform: none; }
 
-    /* Kanban Board -> horizontally scrollable */
+    /* Kanban Board -> horizontally scrollable, grows to fill items-view */
     .kanban-board {
         display: flex;
         grid-template-columns: none;
@@ -866,8 +877,8 @@ input:focus, textarea:focus {
         overflow-y: hidden;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
-        height: auto;
-        min-height: 0;
+        flex: 1 1 auto;
+        min-height: 320px;
         gap: 0.85rem;
         padding-bottom: 0.5rem;
     }
@@ -875,16 +886,17 @@ input:focus, textarea:focus {
     .kanban-column {
         flex: 0 0 85%;
         min-width: 0;
-        max-height: calc(100vh - 320px);
-        min-height: 360px;
+        height: 100%;
         scroll-snap-align: start;
     }
 
-    /* Board footer on mobile: keep delete + new task on one row */
+    /* Board footer on mobile: anchored to bottom of the view */
     .board-footer {
-        margin-top: 1rem;
+        margin-top: auto;
+        padding-top: 1rem;
         gap: 0.6rem;
         align-items: stretch;
+        flex-shrink: 0;
     }
 
     .board-footer .trash-zone {
