@@ -28,6 +28,9 @@ function setupEventListeners() {
 
     // Modal
     newTaskBtn.addEventListener('click', () => openModal());
+    document.querySelectorAll('.new-task-trigger').forEach(btn => {
+        btn.addEventListener('click', () => openModal());
+    });
     closeModalBtns.forEach(btn => btn.addEventListener('click', closeModal));
     window.addEventListener('click', (e) => {
         if (e.target === taskModal) closeModal();
