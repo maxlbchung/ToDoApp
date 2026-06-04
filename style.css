@@ -538,6 +538,76 @@ body {
     background: rgba(239, 68, 68, 0.1);
 }
 
+/* Upcoming Deadlines list (below calendar) */
+.calendar-deadlines {
+    margin-top: 2rem;
+    padding: 1.5rem 1.75rem;
+}
+
+.calendar-deadlines h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.deadline-group {
+    margin-bottom: 1.5rem;
+}
+
+.deadline-group:last-child {
+    margin-bottom: 0;
+}
+
+.deadline-date-header {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.deadline-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.deadline-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition);
+}
+
+.deadline-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(3px);
+}
+
+.deadline-info h4 {
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.deadline-time {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.deadline-time i {
+    width: 14px;
+}
+
 /* Buttons */
 .btn-primary {
     background: var(--accent-purple);
@@ -977,6 +1047,39 @@ input:focus, textarea:focus {
         line-height: 5px;
         border-radius: 3px;
         box-shadow: none;
+    }
+
+    /* Upcoming Deadlines stacked below the calendar */
+    .calendar-deadlines {
+        margin-top: 1.25rem;
+        padding: 1rem 1.1rem;
+    }
+
+    .calendar-deadlines h2 {
+        font-size: 1.05rem;
+        margin-bottom: 1rem;
+    }
+
+    .deadline-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .deadline-date-header {
+        font-size: 0.75rem;
+        margin-bottom: 0.6rem;
+        padding-bottom: 0.4rem;
+    }
+
+    .deadline-item {
+        padding: 0.75rem 0.85rem;
+    }
+
+    .deadline-item:hover {
+        transform: none;
+    }
+
+    .deadline-info h4 {
+        font-size: 0.9rem;
     }
 
     /* Modal */

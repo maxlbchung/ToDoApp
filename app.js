@@ -310,9 +310,73 @@ function renderCalendar() {
         dayDiv.addEventListener('click', () => {
             // Optional: Show tasks for this day in a list or focus board
         });
-        
+
         daysContainer.appendChild(dayDiv);
     }
+
+    renderUpcomingDeadlines();
+}
+
+function renderUpcomingDeadlines() {
+    const container = document.getElementById('upcoming-deadlines-list');
+    if (!container) return;
+
+    const now = new Date();
+    const upcoming = tasks
+        .filter(t => t.status !== 'done' && new Date(t.dueDate) >= now)
+        .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+        .slice(0, 10);
+
+    if (upcoming.length === 0) {
+        container.innerHTML = '<p class="empty-state">No upcoming deadlines.</p>';
+        return;
+    }
+
+    const groups = new Map();
+    upcoming.forEach(task => {
+        const key = new Date(task.dueDate).toDateString();
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(task);
+    });
+
+    container.innerHTML = '';
+    groups.forEach((items, dateKey) => {
+        const date = new Date(dateKey);
+        const group = document.createElement('div');
+        group.className = 'deadline-group';
+        group.innerHTML = `
+            <h3 class="deadline-date-header">${formatDateHeading(date)}</h3>
+            <div class="deadline-items"></div>
+        `;
+        const itemsEl = group.querySelector('.deadline-items');
+        items.forEach(task => {
+            const item = document.createElement('div');
+            item.className = 'deadline-item';
+            item.style.borderLeft = `4px solid ${task.color}`;
+            const time = new Date(task.dueDate).toLocaleString('en-US', {
+                hour: '2-digit', minute: '2-digit'
+            });
+            item.innerHTML = `
+                <div class="deadline-info">
+                    <h4>${task.title}</h4>
+                    <span class="deadline-time"><i data-lucide="clock"></i> ${time}</span>
+                </div>
+                <button class="btn-icon" onclick="openModalById('${task.id}')"><i data-lucide="edit-3"></i></button>
+            `;
+            itemsEl.appendChild(item);
+        });
+        container.appendChild(group);
+    });
+}
+
+function formatDateHeading(date) {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+    return date.toLocaleString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 }
 
 // --- Drag & Drop ---
