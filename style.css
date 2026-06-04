@@ -254,10 +254,10 @@ body {
 /* Kanban Board */
 .kanban-board {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
-    height: calc(100vh - 200px);
-    min-height: 500px;
+    height: calc(100vh - 320px);
+    min-height: 400px;
 }
 
 .kanban-column {
@@ -269,23 +269,56 @@ body {
     border: 1px solid var(--glass-border);
 }
 
-.trash-column {
-    background: rgba(239, 68, 68, 0.02);
-    border-color: rgba(239, 68, 68, 0.1);
+/* Trash drop zone (separate footer below the board) */
+.trash-zone {
+    margin-top: 1.5rem;
+    background: rgba(239, 68, 68, 0.04);
+    border: 1px dashed rgba(239, 68, 68, 0.35);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    min-height: 80px;
+    transition: var(--transition);
 }
 
-.trash-column .column-header h3, 
-.trash-column .column-header i {
+.trash-zone:hover {
+    background: rgba(239, 68, 68, 0.07);
+    border-color: rgba(239, 68, 68, 0.55);
+}
+
+.trash-zone-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
     color: var(--accent-red);
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    opacity: 0.85;
+    flex-shrink: 0;
 }
 
-.trash-column .task-container {
-    opacity: 0.5;
-    min-height: 100px;
-    border: 2px dashed var(--glass-border);
-    margin-top: 1rem;
-    border-radius: var(--radius-md);
-    display: block;
+.trash-zone-label i {
+    width: 18px;
+    height: 18px;
+}
+
+.trash-zone #delete-container {
+    flex-grow: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 48px;
+    opacity: 0.6;
+    overflow: visible;
+    padding: 0;
+}
+
+.trash-zone #delete-container .task-card {
+    margin-bottom: 0;
+    max-width: 200px;
 }
 
 .column-header {
@@ -822,13 +855,26 @@ input:focus, textarea:focus {
     .kanban-column {
         flex: 0 0 85%;
         min-width: 0;
-        max-height: calc(100vh - 240px);
-        min-height: 400px;
+        max-height: calc(100vh - 320px);
+        min-height: 360px;
         scroll-snap-align: start;
     }
 
-    .kanban-column.trash-column {
-        flex: 0 0 70%;
+    /* Trash footer on mobile */
+    .trash-zone {
+        margin-top: 1rem;
+        padding: 0.85rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .trash-zone-label {
+        font-size: 0.85rem;
+    }
+
+    .trash-zone #delete-container .task-card {
+        max-width: 140px;
+        font-size: 0.85rem;
     }
 
     /* Calendar */

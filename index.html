@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f0f1a">
     <title>Aether Tasks | Productivity Reimagined</title>
     <meta name="description" content="A premium productivity app with Kanban board and Calendar views.">
-    <link rel="stylesheet" href="style.css?v=1.1.0">
+    <link rel="stylesheet" href="style.css?v=1.2.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -123,13 +123,14 @@
                         </div>
                         <div class="task-container" id="done-container"></div>
                     </div>
-                    <div class="kanban-column trash-column" data-status="delete">
-                        <div class="column-header">
-                            <h3>Trash</h3>
-                            <i data-lucide="trash-2"></i>
-                        </div>
-                        <div class="task-container" id="delete-container"></div>
+                </div>
+
+                <div class="trash-zone" data-status="delete">
+                    <div class="trash-zone-label">
+                        <i data-lucide="trash-2"></i>
+                        <span>Drag here to delete</span>
                     </div>
+                    <div class="task-container" id="delete-container"></div>
                 </div>
             </section>
 
