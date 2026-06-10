@@ -290,6 +290,14 @@ body {
     white-space: nowrap;
 }
 
+/* On desktop the sidebar already has a New Task button, so suppress
+   the inline one and let the trash zone fill the footer row. */
+@media (min-width: 769px) {
+    .board-footer .board-new-task-btn {
+        display: none;
+    }
+}
+
 /* Trash drop zone */
 .trash-zone {
     background: rgba(239, 68, 68, 0.04);
