@@ -770,6 +770,190 @@ input:focus, textarea:focus {
     margin-top: 1rem;
 }
 
+.label-optional {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    color: white;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+select option {
+    background: var(--bg-sidebar);
+    color: white;
+}
+
+/* Priority selector (modal) */
+.priority-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.priority-option { cursor: pointer; }
+.priority-option input { display: none; }
+
+.priority-chip {
+    display: inline-block;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.priority-option input:checked + .priority-chip {
+    color: var(--text-primary);
+    border-color: transparent;
+}
+
+.priority-option input:checked + .priority-chip.priority-low { background: rgba(59, 130, 246, 0.25); border-color: var(--accent-blue); }
+.priority-option input:checked + .priority-chip.priority-medium { background: rgba(249, 115, 22, 0.25); border-color: var(--accent-orange); }
+.priority-option input:checked + .priority-chip.priority-high { background: rgba(239, 68, 68, 0.25); border-color: var(--accent-red); }
+.priority-option input:checked + .priority-chip.priority-none { background: var(--glass-bg); border-color: var(--glass-border); }
+
+/* Subtasks (modal) */
+.subtask-add-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.subtask-add-row input {
+    flex-grow: 1;
+}
+
+.subtask-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.subtask-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.subtask-row .subtask-check {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: var(--accent-purple);
+    cursor: pointer;
+}
+
+.subtask-row .subtask-title {
+    flex-grow: 1;
+    padding: 0.5rem 0.65rem;
+}
+
+.subtask-row .subtask-remove {
+    flex-shrink: 0;
+    color: var(--accent-red);
+}
+
+.subtask-remove i { width: 16px; height: 16px; }
+
+/* Task card enrichment */
+.task-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.recurrence-indicator {
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.recurrence-indicator i { width: 15px; height: 15px; }
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.priority-badge i { width: 12px; height: 12px; }
+
+.priority-badge.priority-low { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+.priority-badge.priority-medium { background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); }
+.priority-badge.priority-high { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+
+.task-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.tag-chip {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+}
+
+.subtask-progress {
+    margin-bottom: 0.75rem;
+}
+
+.subtask-progress-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.subtask-progress-label i { width: 13px; height: 13px; }
+
+.subtask-progress-bar {
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.subtask-progress-bar span {
+    display: block;
+    height: 100%;
+    background: var(--accent-purple);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

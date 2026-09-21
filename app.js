@@ -81,6 +81,18 @@ function setupEventListeners() {
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('task-date').value = now.toISOString().slice(0, 16);
     });
+    document.getElementById('clear-date-btn').addEventListener('click', () => {
+        document.getElementById('task-date').value = '';
+    });
+
+    // Subtasks: add via button or Enter key in the subtask input
+    document.getElementById('add-subtask-btn').addEventListener('click', addSubtaskFromInput);
+    document.getElementById('subtask-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addSubtaskFromInput();
+        }
+    });
 
     // Calendar Nav
     document.getElementById('prev-month').addEventListener('click', () => {
@@ -115,6 +127,16 @@ function handleTaskSubmit(e) {
     const dueDate = document.getElementById('task-date').value;
     const color = document.querySelector('input[name="task-color"]:checked').value;
 
+    const priorityInput = document.querySelector('input[name="task-priority"]:checked');
+    const priority = priorityInput ? priorityInput.value : 'none';
+    const recurrence = document.getElementById('task-recurrence').value;
+    const notes = document.getElementById('task-notes').value;
+    const tags = document.getElementById('task-tags').value
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
+    const subtasks = collectSubtasksFromModal();
+
     const existing = id ? tasks.find(t => t.id === id) : null;
 
     const taskData = normalizeTask({
@@ -124,6 +146,11 @@ function handleTaskSubmit(e) {
         description,
         dueDate,
         color,
+        priority,
+        recurrence,
+        notes,
+        tags,
+        subtasks,
         status: existing ? existing.status : 'todo',
         createdAt: existing ? existing.createdAt : new Date().toISOString()
     });
@@ -145,17 +172,30 @@ function deleteTask(id) {
 
 function openModal(task = null) {
     taskForm.reset();
+    clearSubtaskList();
+    document.getElementById('subtask-input').value = '';
+
     if (task) {
         document.getElementById('task-id').value = task.id;
         document.getElementById('task-title').value = task.title;
         document.getElementById('task-desc').value = task.description;
-        document.getElementById('task-date').value = task.dueDate;
-        document.querySelector(`input[name="task-color"][value="${task.color}"]`).checked = true;
+        document.getElementById('task-date').value = task.dueDate || '';
+        const colorInput = document.querySelector(`input[name="task-color"][value="${task.color}"]`);
+        if (colorInput) colorInput.checked = true;
+
+        const priorityInput = document.querySelector(`input[name="task-priority"][value="${task.priority || 'none'}"]`);
+        if (priorityInput) priorityInput.checked = true;
+        document.getElementById('task-recurrence').value = task.recurrence || 'none';
+        document.getElementById('task-tags').value = (task.tags || []).join(', ');
+        document.getElementById('task-notes').value = task.notes || '';
+        (task.subtasks || []).forEach(sub => addSubtaskRow(sub));
+
         document.getElementById('modal-title-text').innerText = 'Edit Task';
     } else {
         document.getElementById('task-id').value = '';
         document.getElementById('modal-title-text').innerText = 'Create Task';
-        // Set default date to now + 1 hour, localized
+        // Set default date to now + 1 hour, localized. Due date stays optional;
+        // the user can clear it with the Clear button.
         const now = new Date();
         now.setHours(now.getHours() + 1);
         now.setMinutes(0);
@@ -167,6 +207,68 @@ function openModal(task = null) {
 
 function closeModal() {
     taskModal.classList.remove('active');
+}
+
+// --- Subtask modal helpers ---
+// The subtask list is edited directly in the DOM. Each row carries its id and
+// checked state as data/attributes so collectSubtasksFromModal can read them back.
+function clearSubtaskList() {
+    document.getElementById('subtask-list').innerHTML = '';
+}
+
+function addSubtaskRow(sub) {
+    const list = document.getElementById('subtask-list');
+    const row = document.createElement('div');
+    row.className = 'subtask-row';
+    row.setAttribute('data-id', sub.id || uid());
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'subtask-check';
+    checkbox.checked = !!sub.done;
+
+    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
+    titleInput.className = 'subtask-title';
+    titleInput.value = sub.title || '';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn-icon subtask-remove';
+    removeBtn.innerHTML = '<i data-lucide="x"></i>';
+    removeBtn.addEventListener('click', () => {
+        row.remove();
+    });
+
+    row.appendChild(checkbox);
+    row.appendChild(titleInput);
+    row.appendChild(removeBtn);
+    list.appendChild(row);
+    refreshIcons();
+}
+
+function addSubtaskFromInput() {
+    const input = document.getElementById('subtask-input');
+    const title = input.value.trim();
+    if (!title) return;
+    addSubtaskRow({ id: uid(), title, done: false });
+    input.value = '';
+    input.focus();
+}
+
+function collectSubtasksFromModal() {
+    const rows = document.querySelectorAll('#subtask-list .subtask-row');
+    const subtasks = [];
+    rows.forEach(row => {
+        const title = row.querySelector('.subtask-title').value.trim();
+        if (!title) return;
+        subtasks.push({
+            id: row.getAttribute('data-id') || uid(),
+            title,
+            done: row.querySelector('.subtask-check').checked
+        });
+    });
+    return subtasks;
 }
 
 function saveAndRender() {
@@ -198,16 +300,16 @@ function renderDashboard() {
     
     const now = new Date();
     
-    // Sort tasks by due date
-    const sortedTasks = [...tasks].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    // Sort tasks by due date (undated tasks sort last)
+    const sortedTasks = [...tasks].sort(compareByDueDate);
     
     // Filter overdue (not completed)
-    const overdue = sortedTasks.filter(t => t.status !== 'done' && new Date(t.dueDate) < now);
+    const overdue = sortedTasks.filter(t => isTaskOverdue(t, now));
     
-    // Filter due soon (within next 7 days, not completed, not overdue)
+    // Filter due soon (within next 7 days, not completed, not overdue, must have a date)
     const sevenDaysLater = new Date();
     sevenDaysLater.setDate(now.getDate() + 7);
-    const dueSoon = sortedTasks.filter(t => t.status !== 'done' && new Date(t.dueDate) >= now && new Date(t.dueDate) <= sevenDaysLater);
+    const dueSoon = sortedTasks.filter(t => t.dueDate && t.status !== 'done' && new Date(t.dueDate) >= now && new Date(t.dueDate) <= sevenDaysLater);
 
     dueSoonList.innerHTML = dueSoon.length ? '' : '<p class="empty-state">No upcoming tasks.</p>';
     dueSoon.slice(0, 5).forEach(task => {
@@ -254,8 +356,8 @@ function renderBoard() {
     // Clear
     Object.values(containers).forEach(c => c.innerHTML = '');
 
-    // Sort tasks by due date (earliest first)
-    const sortedTasks = [...tasks].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    // Sort tasks by due date (earliest first, undated last)
+    const sortedTasks = [...tasks].sort(compareByDueDate);
 
     sortedTasks.forEach(task => {
         const card = createTaskCard(task);
@@ -276,15 +378,43 @@ function renderBoard() {
 }
 
 function createTaskCard(task) {
-    const isOverdue = task.status !== 'done' && new Date(task.dueDate) < new Date();
+    const isOverdue = isTaskOverdue(task);
     const div = document.createElement('div');
     div.className = `task-card ${isOverdue ? 'overdue' : ''}`;
     div.setAttribute('data-id', task.id);
-    
+
+    const priorityBadge = task.priority && task.priority !== 'none'
+        ? `<span class="priority-badge priority-${task.priority}"><i data-lucide="flag"></i>${capitalize(task.priority)}</span>`
+        : '';
+
+    const tagChips = (task.tags && task.tags.length)
+        ? `<div class="task-tags">${task.tags.map(tag => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join('')}</div>`
+        : '';
+
+    const total = (task.subtasks || []).length;
+    const doneCount = (task.subtasks || []).filter(s => s.done).length;
+    const percent = total ? Math.round((doneCount / total) * 100) : 0;
+    const subtaskProgress = total
+        ? `<div class="subtask-progress">
+                <div class="subtask-progress-label"><i data-lucide="check-square"></i> ${doneCount}/${total}</div>
+                <div class="subtask-progress-bar"><span style="width: ${percent}%"></span></div>
+           </div>`
+        : '';
+
+    const recurrenceIcon = task.recurrence && task.recurrence !== 'none'
+        ? `<span class="recurrence-indicator" title="Repeats ${escapeHtml(task.recurrence)}"><i data-lucide="repeat"></i></span>`
+        : '';
+
     div.innerHTML = `
         <div class="task-color-bar" style="background: ${task.color}"></div>
-        <h4>${task.title}</h4>
-        <p>${task.description || 'No description'}</p>
+        <div class="task-card-top">
+            <h4>${escapeHtml(task.title)}</h4>
+            ${recurrenceIcon}
+        </div>
+        ${priorityBadge}
+        <p>${escapeHtml(task.description) || 'No description'}</p>
+        ${tagChips}
+        ${subtaskProgress}
         <div class="task-footer">
             <span class="task-date">
                 <i data-lucide="clock"></i>
@@ -297,6 +427,22 @@ function createTaskCard(task) {
         </div>
     `;
     return div;
+}
+
+function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Escape user-provided text before injecting into innerHTML to avoid XSS.
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function renderCalendar() {
@@ -336,7 +482,7 @@ function renderCalendar() {
             <span class="day-number">${d}</span>
             <div class="day-tasks">
                 ${dayTasks.map(t => {
-                    const isOverdue = t.status !== 'done' && new Date(t.dueDate) < now;
+                    const isOverdue = isTaskOverdue(t, now);
                     return `
                         <div class="calendar-task-label ${isOverdue ? 'overdue' : ''}" 
                              style="background: ${t.color}" 
@@ -364,8 +510,8 @@ function renderUpcomingDeadlines() {
 
     const now = new Date();
     const upcoming = tasks
-        .filter(t => t.status !== 'done' && new Date(t.dueDate) >= now)
-        .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+        .filter(t => t.dueDate && t.status !== 'done' && new Date(t.dueDate) >= now)
+        .sort(compareByDueDate)
         .slice(0, 10);
 
     if (upcoming.length === 0) {
@@ -455,7 +601,24 @@ function initSortable() {
 }
 
 // --- Helpers ---
+// True only for tasks that have a due date, are not done, and are past due.
+// Tasks without a due date are never overdue.
+function isTaskOverdue(task, now = new Date()) {
+    if (!task.dueDate) return false;
+    if (task.status === 'done') return false;
+    return new Date(task.dueDate) < now;
+}
+
+// Sort comparator that keeps dated tasks (earliest first) ahead of undated ones.
+function compareByDueDate(a, b) {
+    if (!a.dueDate && !b.dueDate) return 0;
+    if (!a.dueDate) return 1;
+    if (!b.dueDate) return -1;
+    return new Date(a.dueDate) - new Date(b.dueDate);
+}
+
 function formatDate(dateStr) {
+    if (!dateStr) return 'No due date';
     const date = new Date(dateStr);
     return date.toLocaleString('en-US', { 
         month: 'short', 

@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Enrich the task modal and task cards with the core productivity fields that mature to-do apps (Todoist, TickTick, Things) offer: priority levels, tags/labels, subtasks (checklist with progress), recurrence, and a notes field. Depends on FEAT-001's extended schema. Also make due date optional (many tasks have no deadline) while preserving existing overdue/calendar logic for tasks that do have a date.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "In index.html task modal (#task-form), add form controls styled consistently with existing .form-group / .form-row patterns: a Priority selector (None/Low/Medium/High) as a segmented button group or select; a Tags input (comma-separated text, e.g. id 'task-tags'); a Recurrence select (None/Daily/Weekly/Monthly, id 'task-recurrence'); a Notes textarea (id 'task-notes'); and a Subtasks section with an add-subtask input + list where each row has a checkbox, editable title, and remove button.",
     "Make the due date optional: remove the `required` attribute from #task-date and handle empty dueDate throughout (tasks with no dueDate should not appear as overdue and should sort after dated tasks). Add a small 'Clear'/no-date affordance.",
@@ -25,5 +25,5 @@
     "Confirm existing features (drag-drop status change, calendar labels, dashboard lists) still work after the modal/card changes."
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Added Priority (radio segmented group, name=task-priority), Tags (id task-tags, comma-parsed), Recurrence (select id task-recurrence), Notes (textarea id task-notes), and a dynamic Subtasks section (input id subtask-input + button id add-subtask-btn + #subtask-list rows) to the modal. Subtask rows carry id via data-id and are read back by collectSubtasksFromModal on submit; Enter in the subtask input adds a row. Due date made optional: removed required on #task-date, added a Clear button (id clear-date-btn). New helpers isTaskOverdue() and compareByDueDate() centralize empty-dueDate handling (undated tasks never overdue, sort last); applied in dashboard, board, calendar, and upcoming-deadlines. createTaskCard now renders priority badge (low=blue, medium=orange, high=red, none hidden), tag chips, subtask progress (count + bar), and a recurrence repeat icon. Added escapeHtml() and used it for card title/description/tags to avoid XSS from user text. formatDate returns 'No due date' for empty. Icons refreshed via refreshIcons() (guards missing lucide). CSS added for all new elements matching glass/dark theme; select styling added. Bumped style.css cache-bust to ?v=1.7.0. On create, modal still defaults the due date to now+1h (user can Clear it). Verified: NODE_OPTIONS= node --check app.js exits 0; python3 http.server serves index/app.js/style.css with 200; pure-helper logic unit-checked in node. No automated tests exist (manual/static verification per context.json)."
 }
