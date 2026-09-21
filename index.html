@@ -6,7 +6,31 @@
     <meta name="theme-color" content="#0f0f1a">
     <title>Aether Tasks | Productivity Reimagined</title>
     <meta name="description" content="A premium productivity app with Kanban board and Calendar views.">
-    <link rel="stylesheet" href="style.css?v=1.10.0">
+    <!-- Blocking theme bootstrap: run before first paint so light-theme users do
+         not see a flash of the dark theme. Reads the saved choice and sets the
+         correct class on <body> as early as possible. applyTheme() in app.js
+         later re-applies the same class idempotently. -->
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('aether_theme');
+                var isLight = saved === 'light';
+                var cls = isLight ? 'light-theme' : 'dark-theme';
+                // documentElement exists before <body> is parsed; carry the
+                // choice there so early paint uses it, and mirror onto body.
+                document.documentElement.classList.add(cls);
+                document.addEventListener('DOMContentLoaded', function () {
+                    document.body.classList.remove('light-theme', 'dark-theme');
+                    document.body.classList.add(cls);
+                });
+                if (isLight) {
+                    var meta = document.querySelector('meta[name="theme-color"]');
+                    if (meta) meta.setAttribute('content', '#f4f5fb');
+                }
+            } catch (e) { /* ignore storage access errors */ }
+        })();
+    </script>
+    <link rel="stylesheet" href="style.css?v=1.11.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">

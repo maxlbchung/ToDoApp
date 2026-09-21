@@ -24,8 +24,10 @@
 }
 
 /* Light theme: override the background, text, and glass variables so the whole
-   UI adapts. Accent colors are shared with the dark theme. Applied via
-   body.light-theme before first render to avoid a flash of the wrong theme. */
+   UI adapts. Accent colors are shared with the dark theme. The class is set on
+   <html> by a blocking head script (and mirrored onto <body> by app.js), so the
+   html.light-theme selectors here take effect before first paint. */
+html.light-theme,
 body.light-theme {
     --bg-dark: #f4f5fb;
     --bg-sidebar: #ffffff;
@@ -39,6 +41,9 @@ body.light-theme {
 
 /* Inputs use a dark translucent fill by default; soften it in light mode so
    text stays readable. */
+html.light-theme input,
+html.light-theme textarea,
+html.light-theme select,
 body.light-theme input,
 body.light-theme textarea,
 body.light-theme select {
@@ -46,6 +51,8 @@ body.light-theme select {
     color: var(--text-primary);
 }
 
+html.light-theme input:focus,
+html.light-theme textarea:focus,
 body.light-theme input:focus,
 body.light-theme textarea:focus {
     background: rgba(20, 20, 40, 0.07);

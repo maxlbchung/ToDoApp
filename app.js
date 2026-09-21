@@ -108,6 +108,10 @@ localStorage.setItem('aether_tasks', JSON.stringify(tasks));
 // else keeps the default dark theme.
 function applyTheme(theme) {
     const isLight = theme === 'light';
+    // Keep both <html> and <body> in sync so the class the blocking head script
+    // set on <html> (used for pre-paint light styling) matches app state.
+    document.documentElement.classList.toggle('light-theme', isLight);
+    document.documentElement.classList.toggle('dark-theme', !isLight);
     document.body.classList.toggle('light-theme', isLight);
     document.body.classList.toggle('dark-theme', !isLight);
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -364,14 +368,27 @@ function applyStatusChange(taskId, newStatus) {
     if (!task) return false;
 
     const wasDone = task.status === 'done';
+    // Whether this task had ever been completed before this transition. Used to
+    // guard recurrence so a task cycled Done -> Doing -> Done does not spawn a
+    // duplicate next occurrence.
+    const hadPriorCompletion = !!task.completedAt;
     task.status = newStatus;
 
-    // Only act on the transition INTO done, never when it was already done.
-    if (newStatus === 'done' && !wasDone) {
-        task.completedAt = new Date().toISOString();
-        if (task.recurrence && task.recurrence !== 'none') {
-            tasks.push(buildNextRecurrence(task));
+    if (newStatus === 'done') {
+        // Only act on the transition INTO done, never when it was already done.
+        if (!wasDone) {
+            task.completedAt = new Date().toISOString();
+            // Spawn the next occurrence only on a genuine first completion, i.e.
+            // when there was no prior completedAt before this transition.
+            if (!hadPriorCompletion && task.recurrence && task.recurrence !== 'none') {
+                tasks.push(buildNextRecurrence(task));
+            }
         }
+    } else {
+        // Leaving done un-completes the task: clear the timestamp so analytics
+        // (completed-this-week) stay accurate and the recurrence guard above
+        // reflects reality on any later re-entry into done.
+        task.completedAt = null;
     }
     return true;
 }
@@ -490,6 +507,16 @@ function importTasksFromFile(file) {
             const parsed = JSON.parse(reader.result);
             if (!Array.isArray(parsed)) {
                 throw new Error('Backup is not a task array');
+            }
+            // Confirm before wiping the current tasks: import replaces the whole
+            // array, so an accidental import must not silently discard data.
+            const count = parsed.length;
+            const confirmed = window.confirm(
+                `Import ${count} task${count === 1 ? '' : 's'}? This replaces all ${tasks.length} current task${tasks.length === 1 ? '' : 's'}.`
+            );
+            if (!confirmed) {
+                showToast('Import cancelled');
+                return;
             }
             tasks = parsed.map(normalizeTask);
             saveAndRender();
