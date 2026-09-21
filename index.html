@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f0f1a">
     <title>Aether Tasks | Productivity Reimagined</title>
     <meta name="description" content="A premium productivity app with Kanban board and Calendar views.">
-    <link rel="stylesheet" href="style.css?v=1.9.0">
+    <link rel="stylesheet" href="style.css?v=1.10.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -88,6 +88,37 @@
                             <h3 id="stat-done">0</h3>
                             <p>Completed</p>
                         </div>
+                    </div>
+                </div>
+
+                <div class="analytics-panel glass">
+                    <h2>Productivity Insights</h2>
+                    <div class="analytics-grid">
+                        <div class="completion-ring-wrap">
+                            <div id="completion-ring" class="completion-ring" style="--progress: 0">
+                                <span class="completion-ring-value" id="completion-rate">0%</span>
+                            </div>
+                            <p class="analytics-caption">Completion rate</p>
+                            <p class="analytics-subcaption" id="completion-detail">0 of 0 done</p>
+                        </div>
+                        <div class="analytics-metric">
+                            <div class="analytics-metric-value" id="completed-week">0</div>
+                            <p class="analytics-caption">Completed this week</p>
+                            <p class="analytics-subcaption">last 7 days</p>
+                        </div>
+                        <div class="priority-breakdown">
+                            <p class="analytics-caption">Active by priority</p>
+                            <div id="priority-breakdown-list" class="priority-breakdown-list">
+                                <!-- Priority counts injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="today-focus glass">
+                    <h2>Today</h2>
+                    <div id="today-list" class="task-list-minimal">
+                        <!-- Today's focus tasks injected here -->
                     </div>
                 </div>
 

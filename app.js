@@ -652,19 +652,109 @@ function renderDashboard() {
     overdue.forEach(task => {
         overdueList.appendChild(createTaskListItem(task, true));
     });
+
+    renderAnalytics(now);
+    renderTodayFocus(now, overdue);
+}
+
+// Render the productivity insights panel: completion rate, tasks completed in
+// the last 7 days (from completedAt), and a priority breakdown of active tasks.
+function renderAnalytics(now = new Date()) {
+    const total = tasks.length;
+    const doneCount = tasks.filter(t => t.status === 'done').length;
+    const rate = total ? Math.round((doneCount / total) * 100) : 0;
+
+    const ring = document.getElementById('completion-ring');
+    const rateEl = document.getElementById('completion-rate');
+    const detailEl = document.getElementById('completion-detail');
+    if (ring) ring.style.setProperty('--progress', String(rate));
+    if (rateEl) rateEl.innerText = `${rate}%`;
+    if (detailEl) detailEl.innerText = `${doneCount} of ${total} done`;
+
+    // Completed in the last 7 days, based on completedAt timestamps.
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const completedWeek = tasks.filter(t => {
+        if (!t.completedAt) return false;
+        const done = new Date(t.completedAt);
+        return !isNaN(done.getTime()) && done >= weekAgo && done <= now;
+    }).length;
+    const weekEl = document.getElementById('completed-week');
+    if (weekEl) weekEl.innerText = completedWeek;
+
+    // Priority breakdown among active (not-done) tasks.
+    const breakdownEl = document.getElementById('priority-breakdown-list');
+    if (breakdownEl) {
+        const active = tasks.filter(t => t.status !== 'done');
+        const levels = ['high', 'medium', 'low', 'none'];
+        breakdownEl.innerHTML = levels.map(level => {
+            const count = active.filter(t => (t.priority || 'none') === level).length;
+            const label = level === 'none' ? 'No priority' : capitalize(level);
+            return `
+                <div class="priority-breakdown-item">
+                    <span class="priority-dot priority-${level}"></span>
+                    <span class="priority-breakdown-label">${label}</span>
+                    <span class="priority-breakdown-count">${count}</span>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+// Render the Today focus list: tasks due today plus overdue undone tasks, so
+// there is a single daily action list (Todoist-style Today view).
+function renderTodayFocus(now = new Date(), overdue = []) {
+    const list = document.getElementById('today-list');
+    if (!list) return;
+
+    const todayKey = now.toDateString();
+    const dueToday = tasks.filter(t =>
+        t.dueDate &&
+        t.status !== 'done' &&
+        new Date(t.dueDate).toDateString() === todayKey
+    );
+
+    // Merge due-today with overdue undone tasks, de-duplicating by id, and sort
+    // by due date so the most pressing items surface first.
+    const seen = new Set();
+    const focus = [];
+    [...overdue, ...dueToday].forEach(task => {
+        if (seen.has(task.id)) return;
+        seen.add(task.id);
+        focus.push(task);
+    });
+    focus.sort(compareByDueDate);
+
+    list.innerHTML = focus.length ? '' : '<p class="empty-state">Nothing due today. Enjoy the calm.</p>';
+    focus.forEach(task => {
+        list.appendChild(createTaskListItem(task, isTaskOverdue(task, now)));
+    });
 }
 
 function createTaskListItem(task, isOverdue = false) {
     const div = document.createElement('div');
     div.className = 'task-card-minimal';
     div.style.borderLeft = `4px solid ${task.color}`;
+
+    const priorityBadge = task.priority && task.priority !== 'none'
+        ? `<span class="priority-badge priority-${task.priority}"><i data-lucide="flag"></i>${capitalize(task.priority)}</span>`
+        : '';
+
+    const tagChips = (task.tags && task.tags.length)
+        ? `<div class="task-tags">${task.tags.slice(0, 3).map(tag => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join('')}</div>`
+        : '';
+
+    const meta = (priorityBadge || tagChips)
+        ? `<div class="task-mini-meta">${priorityBadge}${tagChips}</div>`
+        : '';
+
     div.innerHTML = `
         <div class="task-info-mini">
-            <h4>${task.title}</h4>
+            <h4>${escapeHtml(task.title)}</h4>
             <span class="task-date-mini ${isOverdue ? 'overdue-text' : ''}">
                 <i data-lucide="clock"></i>
                 ${formatDate(task.dueDate)}
             </span>
+            ${meta}
         </div>
         <button class="btn-icon" onclick="openModalById('${task.id}')"><i data-lucide="edit-3"></i></button>
     `;
@@ -819,11 +909,15 @@ function renderCalendar() {
             <div class="day-tasks">
                 ${dayTasks.map(t => {
                     const isOverdue = isTaskOverdue(t, now);
+                    const priorityClass = t.priority && t.priority !== 'none'
+                        ? ` has-priority priority-${t.priority}`
+                        : '';
                     return `
-                        <div class="calendar-task-label ${isOverdue ? 'overdue' : ''}" 
+                        <div class="calendar-task-label ${isOverdue ? 'overdue' : ''}${priorityClass}" 
                              style="background: ${t.color}" 
+                             title="${escapeHtml(t.title)}"
                              onclick="event.stopPropagation(); openModalById('${t.id}')">
-                            ${t.title}
+                            ${escapeHtml(t.title)}
                         </div>
                     `;
                 }).join('')}
@@ -879,10 +973,20 @@ function renderUpcomingDeadlines() {
             const time = new Date(task.dueDate).toLocaleString('en-US', {
                 hour: '2-digit', minute: '2-digit'
             });
+            const priorityBadge = task.priority && task.priority !== 'none'
+                ? `<span class="priority-badge priority-${task.priority}"><i data-lucide="flag"></i>${capitalize(task.priority)}</span>`
+                : '';
+            const tagChips = (task.tags && task.tags.length)
+                ? `<div class="task-tags">${task.tags.slice(0, 3).map(tag => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join('')}</div>`
+                : '';
+            const meta = (priorityBadge || tagChips)
+                ? `<div class="task-mini-meta">${priorityBadge}${tagChips}</div>`
+                : '';
             item.innerHTML = `
                 <div class="deadline-info">
-                    <h4>${task.title}</h4>
+                    <h4>${escapeHtml(task.title)}</h4>
                     <span class="deadline-time"><i data-lucide="clock"></i> ${time}</span>
+                    ${meta}
                 </div>
                 <button class="btn-icon" onclick="openModalById('${task.id}')"><i data-lucide="edit-3"></i></button>
             `;

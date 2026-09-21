@@ -279,6 +279,158 @@ body {
     padding: 2rem 0;
 }
 
+/* Priority + tag context inside minimal task cards and deadline items */
+.task-mini-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+}
+
+.task-mini-meta .priority-badge {
+    margin-bottom: 0;
+}
+
+.task-mini-meta .task-tags {
+    margin-bottom: 0;
+}
+
+/* Dashboard analytics panel */
+.analytics-panel {
+    padding: 1.75rem;
+    margin-bottom: 2rem;
+}
+
+.analytics-panel h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.completion-ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.4rem;
+}
+
+/* Progress ring driven by a --progress custom property (0-100). Uses a
+   conic-gradient fill with a masked inner circle to create the ring. */
+.completion-ring {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(
+        var(--accent-purple) calc(var(--progress) * 1%),
+        rgba(255, 255, 255, 0.08) 0
+    );
+    transition: background 0.4s ease;
+}
+
+.completion-ring::before {
+    content: '';
+    position: absolute;
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    background: var(--bg-dark);
+}
+
+.completion-ring-value {
+    position: relative;
+    font-size: 1.4rem;
+    font-weight: 700;
+    z-index: 1;
+}
+
+.analytics-metric {
+    text-align: center;
+}
+
+.analytics-metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+}
+
+.analytics-caption {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.analytics-subcaption {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.priority-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.priority-breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+}
+
+.priority-breakdown-label {
+    flex: 1;
+    color: var(--text-secondary);
+}
+
+.priority-breakdown-count {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-secondary);
+}
+
+.priority-dot.priority-high { background: var(--accent-red); }
+.priority-dot.priority-medium { background: var(--accent-orange); }
+.priority-dot.priority-low { background: var(--accent-blue); }
+.priority-dot.priority-none { background: var(--text-secondary); }
+
+/* Today focus list */
+.today-focus {
+    margin-bottom: 2rem;
+}
+
+.today-focus h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem 1.5rem 0;
+}
+
+/* Priority accent on calendar labels */
+.calendar-task-label.has-priority {
+    box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.55);
+}
+
 /* Board Actions Toolbar (search + filters + sort) */
 .board-actions {
     display: flex;

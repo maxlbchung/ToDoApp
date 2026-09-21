@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "feat",
   "description": "Round out the app with productivity insight and polish: enrich the Dashboard with a productivity/analytics panel (completion stats, priority breakdown, tasks completed recently) and a 'Today' focus list; make Dashboard and Calendar respect the enriched data (priority indicators, tags); and update README.md to document every new feature. Depends on all prior features. This is the finishing feature that makes the app feel complete.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Dashboard analytics: add a panel to #home-view showing completion rate (done / total as % with a progress ring or bar), count completed in the last 7 days (using completedAt), and a priority breakdown (counts of high/medium/low/none among active tasks). Render in app.js renderDashboard; add CSS matching the glass theme.",
     "Add a 'Today' section to the dashboard listing tasks due today (and overdue) that are not done, giving a daily focus list like Todoist's Today view. Reuse createTaskListItem, showing priority and tags.",
@@ -24,5 +24,5 @@
     "Read README.md and confirm it reflects the implemented feature set."
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Added dashboard analytics panel (completion-rate conic-gradient ring driven by --progress, completed-this-week count from completedAt over the last 7 days, and an active-task priority breakdown) plus a Today focus list (due-today merged with overdue undone, de-duped and sorted by due date) to #home-view in index.html; both rendered by new renderAnalytics()/renderTodayFocus() called from renderDashboard(). Enriched createTaskListItem() to escape the title (was unescaped) and show a task-mini-meta row with priority badge + up to 3 tag chips; same meta added to calendar upcoming-deadlines items, and calendar day labels now escape titles/tooltips and get a priority accent. Analytics/stats already re-render on create/complete/delete via renderAll(). Added matching glass-theme CSS (works in both dark and light via var(--bg-dark) for the ring center and shared accent vars) and bumped style.css cache-bust to ?v=1.10.0. README Features section rewritten to document all FEAT-001..005 capabilities; zero-build/tech-stack/run/deploy sections left accurate. Verified: `NODE_OPTIONS= node --check app.js` exits 0; static server returns 200 for index.html, style.css?v=1.10.0, and app.js; analytics math validated with a Node harness (rate 40%, completedWeek 1, priority breakdown correct). No automated tests exist (manual/static verification per context.json)."
 }
