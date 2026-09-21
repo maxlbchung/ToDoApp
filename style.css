@@ -251,13 +251,117 @@ body {
     padding: 2rem 0;
 }
 
+/* Board Actions Toolbar (search + filters + sort) */
+.board-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.board-search-wrap {
+    position: relative;
+    flex: 1 1 220px;
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+}
+
+.board-search-wrap i {
+    position: absolute;
+    left: 0.75rem;
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+.board-search-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.75rem 0.65rem 2.5rem;
+    color: white;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.board-search-input:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.board-select {
+    width: auto;
+    flex: 0 1 auto;
+    min-width: 140px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.75rem;
+    color: white;
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.board-select:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Quick Add row (Todoist/Things-style fast capture) */
+.quick-add-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 0.35rem 0.85rem;
+    margin-bottom: 1.25rem;
+    transition: var(--transition);
+}
+
+.quick-add-row:focus-within {
+    border-color: var(--accent-purple);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.quick-add-row i {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-purple);
+    flex-shrink: 0;
+}
+
+.quick-add-input {
+    flex: 1 1 auto;
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0.6rem 0;
+    color: white;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.quick-add-input:focus {
+    outline: none;
+    background: transparent;
+}
+
 /* Kanban Board */
 .kanban-board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
-    height: calc(100vh - 320px);
-    min-height: 400px;
+    height: calc(100vh - 420px);
+    min-height: 360px;
 }
 
 .kanban-column {
@@ -1119,6 +1223,28 @@ select option {
 
     .task-card-minimal { padding: 0.85rem; }
     .task-card-minimal:hover { transform: none; }
+
+    /* Board toolbar + quick add stack vertically on phones */
+    .board-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+        margin-top: 0.85rem;
+    }
+
+    .board-search-wrap {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .board-select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .quick-add-row {
+        margin-bottom: 1rem;
+    }
 
     /* Kanban Board -> horizontally scrollable, sized to content */
     .kanban-board {

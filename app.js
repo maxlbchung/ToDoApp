@@ -38,6 +38,14 @@ let tasks = (JSON.parse(localStorage.getItem('aether_tasks')) || []).map(normali
 let currentView = 'home';
 let calendarDate = new Date();
 
+// Board discovery state: search term, active filters, and sort mode.
+// These narrow which cards render per Kanban column without touching the
+// underlying tasks array or their status.
+let searchTerm = '';
+let filterPriority = 'all';
+let filterTag = 'all';
+let sortBy = 'dueDate';
+
 // One-time migration: persist normalized tasks so existing data gains new fields.
 localStorage.setItem('aether_tasks', JSON.stringify(tasks));
 
@@ -93,6 +101,50 @@ function setupEventListeners() {
             addSubtaskFromInput();
         }
     });
+
+    // Board discovery: search, filters, and sort re-render the board only.
+    const boardSearch = document.getElementById('board-search');
+    if (boardSearch) {
+        boardSearch.addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            renderBoard();
+        });
+    }
+    const priorityFilter = document.getElementById('board-filter-priority');
+    if (priorityFilter) {
+        priorityFilter.addEventListener('change', (e) => {
+            filterPriority = e.target.value;
+            renderBoard();
+        });
+    }
+    const tagFilter = document.getElementById('board-filter-tag');
+    if (tagFilter) {
+        tagFilter.addEventListener('change', (e) => {
+            filterTag = e.target.value;
+            renderBoard();
+        });
+    }
+    const sortSelect = document.getElementById('board-sort');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+            sortBy = e.target.value;
+            renderBoard();
+        });
+    }
+
+    // Quick add: create a todo task from just a title on Enter (Todoist-style).
+    const quickAdd = document.getElementById('quick-add-input');
+    if (quickAdd) {
+        quickAdd.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            const title = quickAdd.value.trim();
+            if (!title) return;
+            tasks.push(normalizeTask({ title, status: 'todo' }));
+            quickAdd.value = '';
+            saveAndRender();
+        });
+    }
 
     // Calendar Nav
     document.getElementById('prev-month').addEventListener('click', () => {
@@ -353,28 +405,32 @@ function renderBoard() {
         delete: document.getElementById('delete-container')
     };
 
+    // Keep the tag filter in sync with the current set of tags.
+    populateTagFilter();
+
     // Clear
     Object.values(containers).forEach(c => c.innerHTML = '');
 
-    // Sort tasks by due date (earliest first, undated last)
-    const sortedTasks = [...tasks].sort(compareByDueDate);
+    // Apply search, filters, and sort before rendering.
+    const visibleTasks = getVisibleTasks();
 
-    sortedTasks.forEach(task => {
+    visibleTasks.forEach(task => {
         const card = createTaskCard(task);
         if (containers[task.status]) {
             containers[task.status].appendChild(card);
         }
     });
 
-    // Update counts
+    // Update counts to reflect the filtered tasks shown in each column.
     ['todo', 'doing', 'done'].forEach(status => {
         const countEl = document.querySelector(`[data-status="${status}"] .task-count`);
         if (countEl) {
-            countEl.innerText = tasks.filter(t => t.status === status).length;
+            countEl.innerText = visibleTasks.filter(t => t.status === status).length;
         }
     });
 
     initSortable();
+    refreshIcons();
 }
 
 function createTaskCard(task) {
@@ -615,6 +671,91 @@ function compareByDueDate(a, b) {
     if (!a.dueDate) return 1;
     if (!b.dueDate) return -1;
     return new Date(a.dueDate) - new Date(b.dueDate);
+}
+
+// Numeric rank for priority so higher priorities sort first. Unknown or
+// 'none' priorities rank lowest.
+function priorityRank(priority) {
+    switch (priority) {
+        case 'high': return 3;
+        case 'medium': return 2;
+        case 'low': return 1;
+        default: return 0;
+    }
+}
+
+// Apply the active board search, filters, and sort to the tasks array.
+// Returns a new sorted array; does not mutate global state.
+function getVisibleTasks() {
+    const term = searchTerm.trim().toLowerCase();
+
+    let visible = tasks.filter(task => {
+        // Search matches title, description, tags, or notes (case-insensitive).
+        if (term) {
+            const haystack = [
+                task.title,
+                task.description,
+                (task.tags || []).join(' '),
+                task.notes
+            ].join(' ').toLowerCase();
+            if (!haystack.includes(term)) return false;
+        }
+
+        // Priority filter.
+        if (filterPriority !== 'all' && task.priority !== filterPriority) return false;
+
+        // Tag filter.
+        if (filterTag !== 'all' && !(task.tags || []).includes(filterTag)) return false;
+
+        return true;
+    });
+
+    // Sort by the selected mode.
+    visible.sort((a, b) => {
+        switch (sortBy) {
+            case 'priority': {
+                const diff = priorityRank(b.priority) - priorityRank(a.priority);
+                if (diff !== 0) return diff;
+                return compareByDueDate(a, b);
+            }
+            case 'created':
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            case 'title':
+                return (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' });
+            case 'dueDate':
+            default:
+                return compareByDueDate(a, b);
+        }
+    });
+
+    return visible;
+}
+
+// Rebuild the tag filter <select> from the union of all tags across every
+// task, preserving the current selection when possible.
+function populateTagFilter() {
+    const select = document.getElementById('board-filter-tag');
+    if (!select) return;
+
+    const allTags = new Set();
+    tasks.forEach(task => (task.tags || []).forEach(tag => {
+        if (tag) allTags.add(tag);
+    }));
+    const sortedTags = Array.from(allTags).sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+    // If the currently selected tag no longer exists, fall back to 'all'.
+    if (filterTag !== 'all' && !allTags.has(filterTag)) {
+        filterTag = 'all';
+    }
+
+    let html = '<option value="all">All tags</option>';
+    sortedTags.forEach(tag => {
+        const selected = tag === filterTag ? ' selected' : '';
+        html += `<option value="${escapeHtml(tag)}"${selected}>${escapeHtml(tag)}</option>`;
+    });
+    select.innerHTML = html;
+    select.value = filterTag;
 }
 
 function formatDate(dateStr) {

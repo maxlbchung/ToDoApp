@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f0f1a">
     <title>Aether Tasks | Productivity Reimagined</title>
     <meta name="description" content="A premium productivity app with Kanban board and Calendar views.">
-    <link rel="stylesheet" href="style.css?v=1.7.0">
+    <link rel="stylesheet" href="style.css?v=1.8.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -97,10 +97,34 @@
                 <header class="view-header">
                     <h1>Task Board</h1>
                     <div class="board-actions">
-                        <!-- Search/Filter could go here -->
+                        <div class="board-search-wrap">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="board-search" class="board-search-input" placeholder="Search tasks...">
+                        </div>
+                        <select id="board-filter-priority" class="board-select" aria-label="Filter by priority">
+                            <option value="all">All priorities</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                            <option value="none">No priority</option>
+                        </select>
+                        <select id="board-filter-tag" class="board-select" aria-label="Filter by tag">
+                            <option value="all">All tags</option>
+                        </select>
+                        <select id="board-sort" class="board-select" aria-label="Sort tasks">
+                            <option value="dueDate">Sort: Due date</option>
+                            <option value="priority">Sort: Priority</option>
+                            <option value="created">Sort: Created</option>
+                            <option value="title">Sort: Title</option>
+                        </select>
                     </div>
                 </header>
-                
+
+                <div class="quick-add-row">
+                    <i data-lucide="plus-circle"></i>
+                    <input type="text" id="quick-add-input" class="quick-add-input" placeholder="Quick add a task and press Enter...">
+                </div>
+
                 <div class="kanban-board">
                     <div class="kanban-column" data-status="todo">
                         <div class="column-header">
