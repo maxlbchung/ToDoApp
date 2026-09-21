@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Add discovery and organization tooling to the Board view that mature apps rely on: a search box, filters (priority, tag, status), sort options, and a fast inline 'quick add' input. These operate on the enriched task data from FEAT-002. Keep the Kanban drag-and-drop intact; search/filter/sort narrow which cards are shown per column.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In index.html, populate the currently-empty .board-actions area in #items-view header with: a search input (id 'board-search'), a priority filter select, a tag filter select (populated dynamically from existing task tags), and a sort select (Due date / Priority / Created / Title). Style with existing form-control look.",
     "Add a quick-add input row above or below the kanban columns (id 'quick-add-input') that creates a 'todo' task from just a title on Enter, using normalizeTask defaults, then re-renders. This mirrors Todoist/Things quick capture.",
