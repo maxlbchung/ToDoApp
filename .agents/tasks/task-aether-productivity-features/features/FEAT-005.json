@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Round out the app with productivity insight and polish: enrich the Dashboard with a productivity/analytics panel (completion stats, priority breakdown, tasks completed recently) and a 'Today' focus list; make Dashboard and Calendar respect the enriched data (priority indicators, tags); and update README.md to document every new feature. Depends on all prior features. This is the finishing feature that makes the app feel complete.",
+  "status": "pending",
+  "steps": [
+    "Dashboard analytics: add a panel to #home-view showing completion rate (done / total as % with a progress ring or bar), count completed in the last 7 days (using completedAt), and a priority breakdown (counts of high/medium/low/none among active tasks). Render in app.js renderDashboard; add CSS matching the glass theme.",
+    "Add a 'Today' section to the dashboard listing tasks due today (and overdue) that are not done, giving a daily focus list like Todoist's Today view. Reuse createTaskListItem, showing priority and tags.",
+    "Show priority and tag context in existing dashboard lists (Due Soon / Immediate Attention) and in calendar task labels/upcoming-deadlines items, so the enriched data is visible across views. Keep changes lightweight and consistent.",
+    "Ensure stats and analytics update correctly when tasks are completed/created/deleted (they re-render via renderAll already).",
+    "Update README.md Features section to document all new capabilities: priorities, tags/labels, subtasks/checklists, recurring tasks, notes, optional due dates, search/filter/sort, quick add, undo delete, light/dark theme, keyboard shortcuts, JSON export/import, dashboard analytics and Today focus list. Keep the zero-build/tech-stack/run/deploy sections accurate.",
+    "Bump the style.css cache-busting query (?v=) in index.html if CSS changed."
+  ],
+  "acceptance_criteria": [
+    "The dashboard shows a completion rate that matches done/total, a 'completed in last 7 days' count derived from completedAt, and a priority breakdown that matches the current tasks.",
+    "The dashboard 'Today' list shows tasks due today plus overdue undone tasks, with priority/tag indicators.",
+    "Priority/tag context appears in Due Soon, Immediate Attention, calendar labels and upcoming deadlines.",
+    "README.md documents every new feature and remains accurate about the zero-build static architecture and deployment.",
+    "`node --check app.js` exits 0 and the app renders all views without console errors."
+  ],
+  "verification": [
+    "Run `node --check app.js` (exit 0).",
+    "Serve with `python3 -m http.server 8000`; create/complete tasks and confirm analytics numbers are correct, Today list is correct, and priority/tag indicators appear across Dashboard and Calendar; confirm no console errors.",
+    "Read README.md and confirm it reflects the implemented feature set."
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

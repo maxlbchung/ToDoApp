@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Add discovery and organization tooling to the Board view that mature apps rely on: a search box, filters (priority, tag, status), sort options, and a fast inline 'quick add' input. These operate on the enriched task data from FEAT-002. Keep the Kanban drag-and-drop intact; search/filter/sort narrow which cards are shown per column.",
+  "status": "pending",
+  "steps": [
+    "In index.html, populate the currently-empty .board-actions area in #items-view header with: a search input (id 'board-search'), a priority filter select, a tag filter select (populated dynamically from existing task tags), and a sort select (Due date / Priority / Created / Title). Style with existing form-control look.",
+    "Add a quick-add input row above or below the kanban columns (id 'quick-add-input') that creates a 'todo' task from just a title on Enter, using normalizeTask defaults, then re-renders. This mirrors Todoist/Things quick capture.",
+    "In app.js, introduce board filter/sort state variables (searchTerm, filterPriority, filterTag, sortBy) and a `getVisibleTasks()` helper that applies search (title/description/tags/notes match), filters, and sort. renderBoard should render from getVisibleTasks() per status column. Update column counts to reflect filtered counts vs totals sensibly (show filtered count).",
+    "Wire input/change listeners in setupEventListeners for search, filters, sort, and quick-add. Debounce or directly re-render on input for search.",
+    "Populate the tag filter <select> dynamically from the union of all tags across tasks whenever the board renders (preserve current selection).",
+    "Add CSS for the board actions toolbar (search + selects laid out responsively) and the quick-add row, matching the theme; ensure it collapses gracefully on mobile (stack vertically).",
+    "Bump the style.css cache-busting query (?v=) in index.html."
+  ],
+  "acceptance_criteria": [
+    "Typing in the search box narrows visible cards across all columns to those matching title/description/tags/notes (case-insensitive) in real time.",
+    "Selecting a priority or tag filter shows only matching tasks; selecting a sort option reorders cards within columns accordingly.",
+    "Typing a title in quick-add and pressing Enter creates a new todo task, clears the input, and the card appears immediately and persists to localStorage.",
+    "Drag-and-drop between columns still updates status and persists (when SortableJS is available).",
+    "`node --check app.js` exits 0 and no console errors occur while searching/filtering/sorting/quick-adding."
+  ],
+  "verification": [
+    "Run `node --check app.js` (exit 0).",
+    "Serve with `python3 -m http.server 8000`; create several tasks with varied priority/tags/dates; verify search, each filter, each sort option, and quick-add; verify drag-drop still works; confirm no console errors."
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

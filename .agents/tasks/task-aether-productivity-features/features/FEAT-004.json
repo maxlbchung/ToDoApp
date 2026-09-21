@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Add power-user and data-management features common to mature productivity apps: recurring-task regeneration on completion, an undo toast for deletions, a light/dark theme toggle, keyboard shortcuts, and JSON data export/import (backup & restore). These build on the schema (FEAT-001) and completion/recurrence data (FEAT-002).",
+  "status": "pending",
+  "steps": [
+    "Recurring tasks: when a task with recurrence != 'none' is moved to 'done' (via drag to Done column and via any 'complete' action), set its completedAt, and spawn a new task (new id, status 'todo', completedAt null) with the dueDate advanced by the recurrence interval (daily +1 day, weekly +7 days, monthly +1 month) preserving title/description/color/priority/tags/subtasks(reset done=false)/notes/recurrence. Implement in the status-change path (initSortable onEnd) and factor into a helper so it is reused.",
+    "Undo delete: replace immediate permanent deletion (trash drag and deleteTask) with a mechanism that removes the task from the array but keeps it in a `lastDeleted` buffer and shows a toast ('Task deleted - Undo') for ~5 seconds; clicking Undo restores it. Add a reusable showToast(message, actionLabel, actionFn) helper and toast container in index.html + CSS.",
+    "Theme toggle: add a light theme. Define light-theme CSS variable overrides (body.light-theme { ... }) for the existing --bg, --text, --glass vars so the whole UI adapts. Add a toggle control in the sidebar footer (or header) that flips body class and persists the choice to localStorage (key 'aether_theme'); apply on load before first render to avoid flash.",
+    "Keyboard shortcuts: 'n' opens the new-task modal, 'Escape' closes the modal (verify existing), '/' focuses the board search input (from FEAT-003). Ignore shortcuts while typing in inputs/textareas. Register in setupEventListeners.",
+    "Data export/import: add Export (download tasks as JSON file named aether-tasks-backup.json using a Blob + anchor) and Import (file input that reads a JSON file, validates it is an array, runs each through normalizeTask, replaces or merges tasks, then saves+renders). Add controls in the sidebar footer or a small settings area; guard against malformed files with a toast error.",
+    "Add CSS for the toast, theme toggle control, and export/import buttons consistent with the theme. Bump the style.css cache-busting query (?v=) in index.html."
+  ],
+  "acceptance_criteria": [
+    "Completing (moving to Done) a task whose recurrence is Daily/Weekly/Monthly creates exactly one new todo task with the due date advanced by the correct interval and subtasks reset to undone; the original stays in Done with completedAt set.",
+    "Deleting a task (trash drag or delete action) shows an Undo toast; clicking Undo within the window restores the task to its prior state and column; letting it expire leaves it deleted. localStorage reflects the final state.",
+    "Toggling the theme switches the entire UI between dark and light, persists across reload, and applies on load without a flash of the wrong theme.",
+    "Pressing 'n' opens the modal, 'Escape' closes it, '/' focuses board search; shortcuts do not fire while typing in a field.",
+    "Export downloads a JSON array of all tasks; importing that file restores the same tasks (round-trip), and importing a malformed file shows an error toast without corrupting existing data.",
+    "`node --check app.js` exits 0 and no console errors during these flows."
+  ],
+  "verification": [
+    "Run `node --check app.js` (exit 0).",
+    "Serve with `python3 -m http.server 8000`; verify recurrence regeneration, undo toast (both undo and expire), theme toggle + reload persistence, each keyboard shortcut, and export/import round-trip plus malformed-import handling; confirm no console errors."
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

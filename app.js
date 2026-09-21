@@ -1,7 +1,45 @@
+// --- Pure Helpers (reused by later features) ---
+// Generate a reasonably unique id from time + randomness.
+function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+// Guard lucide icon refresh so the app still works when the CDN is unavailable.
+function refreshIcons() {
+    if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+    }
+}
+
+// Ensure a task has all fields the app relies on, filling defaults for any
+// that are missing. Preserves existing fields; safe to run on old-shape tasks.
+function normalizeTask(task) {
+    const t = task || {};
+    return {
+        id: t.id || uid(),
+        title: t.title || '',
+        description: t.description || '',
+        dueDate: t.dueDate || '',
+        color: t.color || '#6c5ce7',
+        status: t.status || 'todo',
+        createdAt: t.createdAt || new Date().toISOString(),
+        priority: t.priority || 'none',
+        tags: Array.isArray(t.tags) ? t.tags : [],
+        subtasks: Array.isArray(t.subtasks) ? t.subtasks : [],
+        recurrence: t.recurrence || 'none',
+        pinned: typeof t.pinned === 'boolean' ? t.pinned : false,
+        completedAt: t.completedAt || null,
+        notes: typeof t.notes === 'string' ? t.notes : ''
+    };
+}
+
 // App State
-let tasks = JSON.parse(localStorage.getItem('aether_tasks')) || [];
+let tasks = (JSON.parse(localStorage.getItem('aether_tasks')) || []).map(normalizeTask);
 let currentView = 'home';
 let calendarDate = new Date();
+
+// One-time migration: persist normalized tasks so existing data gains new fields.
+localStorage.setItem('aether_tasks', JSON.stringify(tasks));
 
 // DOM Elements
 const views = document.querySelectorAll('.view');
@@ -15,7 +53,7 @@ const closeModalBtns = document.querySelectorAll('.close-modal');
 function init() {
     setupEventListeners();
     renderAll();
-    lucide.createIcons();
+    refreshIcons();
 }
 
 function setupEventListeners() {
@@ -77,15 +115,18 @@ function handleTaskSubmit(e) {
     const dueDate = document.getElementById('task-date').value;
     const color = document.querySelector('input[name="task-color"]:checked').value;
 
-    const taskData = {
-        id: id || Date.now().toString(),
+    const existing = id ? tasks.find(t => t.id === id) : null;
+
+    const taskData = normalizeTask({
+        ...(existing || {}),
+        id: id || uid(),
         title,
         description,
         dueDate,
         color,
-        status: id ? tasks.find(t => t.id === id).status : 'todo',
-        createdAt: id ? tasks.find(t => t.id === id).createdAt : new Date().toISOString()
-    };
+        status: existing ? existing.status : 'todo',
+        createdAt: existing ? existing.createdAt : new Date().toISOString()
+    });
 
     if (id) {
         tasks = tasks.map(t => t.id === id ? taskData : t);
@@ -142,7 +183,7 @@ function renderAll() {
     if (currentView === 'home') renderDashboard();
     if (currentView === 'items') renderBoard();
     if (currentView === 'calendar') renderCalendar();
-    lucide.createIcons();
+    refreshIcons();
 }
 
 function renderStats() {
@@ -381,6 +422,8 @@ function formatDateHeading(date) {
 
 // --- Drag & Drop ---
 function initSortable() {
+    if (typeof Sortable === 'undefined') return;
+
     ['todo', 'doing', 'done', 'delete'].forEach(status => {
         const el = document.getElementById(`${status}-container`);
         if (!el) return;
