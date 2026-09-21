@@ -6,7 +6,31 @@
     <meta name="theme-color" content="#0f0f1a">
     <title>Aether Tasks | Productivity Reimagined</title>
     <meta name="description" content="A premium productivity app with Kanban board and Calendar views.">
-    <link rel="stylesheet" href="style.css?v=1.6.1">
+    <!-- Blocking theme bootstrap: run before first paint so light-theme users do
+         not see a flash of the dark theme. Reads the saved choice and sets the
+         correct class on <body> as early as possible. applyTheme() in app.js
+         later re-applies the same class idempotently. -->
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('aether_theme');
+                var isLight = saved === 'light';
+                var cls = isLight ? 'light-theme' : 'dark-theme';
+                // documentElement exists before <body> is parsed; carry the
+                // choice there so early paint uses it, and mirror onto body.
+                document.documentElement.classList.add(cls);
+                document.addEventListener('DOMContentLoaded', function () {
+                    document.body.classList.remove('light-theme', 'dark-theme');
+                    document.body.classList.add(cls);
+                });
+                if (isLight) {
+                    var meta = document.querySelector('meta[name="theme-color"]');
+                    if (meta) meta.setAttribute('content', '#f4f5fb');
+                }
+            } catch (e) { /* ignore storage access errors */ }
+        })();
+    </script>
+    <link rel="stylesheet" href="style.css?v=1.11.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -40,6 +64,21 @@
                     <i data-lucide="plus"></i>
                     <span>New Task</span>
                 </button>
+                <div class="sidebar-tools">
+                    <button id="theme-toggle-btn" type="button" class="btn-tool" aria-label="Toggle theme">
+                        <i data-lucide="sun"></i>
+                        <span>Light mode</span>
+                    </button>
+                    <button id="export-btn" type="button" class="btn-tool" aria-label="Export tasks">
+                        <i data-lucide="download"></i>
+                        <span>Export</span>
+                    </button>
+                    <button id="import-btn" type="button" class="btn-tool" aria-label="Import tasks">
+                        <i data-lucide="upload"></i>
+                        <span>Import</span>
+                    </button>
+                    <input type="file" id="import-input" accept="application/json,.json" hidden>
+                </div>
             </div>
         </nav>
 
@@ -76,6 +115,37 @@
                     </div>
                 </div>
 
+                <div class="analytics-panel glass">
+                    <h2>Productivity Insights</h2>
+                    <div class="analytics-grid">
+                        <div class="completion-ring-wrap">
+                            <div id="completion-ring" class="completion-ring" style="--progress: 0">
+                                <span class="completion-ring-value" id="completion-rate">0%</span>
+                            </div>
+                            <p class="analytics-caption">Completion rate</p>
+                            <p class="analytics-subcaption" id="completion-detail">0 of 0 done</p>
+                        </div>
+                        <div class="analytics-metric">
+                            <div class="analytics-metric-value" id="completed-week">0</div>
+                            <p class="analytics-caption">Completed this week</p>
+                            <p class="analytics-subcaption">last 7 days</p>
+                        </div>
+                        <div class="priority-breakdown">
+                            <p class="analytics-caption">Active by priority</p>
+                            <div id="priority-breakdown-list" class="priority-breakdown-list">
+                                <!-- Priority counts injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="today-focus glass">
+                    <h2>Today</h2>
+                    <div id="today-list" class="task-list-minimal">
+                        <!-- Today's focus tasks injected here -->
+                    </div>
+                </div>
+
                 <div class="dashboard-sections">
                     <div class="due-soon glass">
                         <h2>Due Soon</h2>
@@ -97,10 +167,34 @@
                 <header class="view-header">
                     <h1>Task Board</h1>
                     <div class="board-actions">
-                        <!-- Search/Filter could go here -->
+                        <div class="board-search-wrap">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="board-search" class="board-search-input" placeholder="Search tasks...">
+                        </div>
+                        <select id="board-filter-priority" class="board-select" aria-label="Filter by priority">
+                            <option value="all">All priorities</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                            <option value="none">No priority</option>
+                        </select>
+                        <select id="board-filter-tag" class="board-select" aria-label="Filter by tag">
+                            <option value="all">All tags</option>
+                        </select>
+                        <select id="board-sort" class="board-select" aria-label="Sort tasks">
+                            <option value="dueDate">Sort: Due date</option>
+                            <option value="priority">Sort: Priority</option>
+                            <option value="created">Sort: Created</option>
+                            <option value="title">Sort: Title</option>
+                        </select>
                     </div>
                 </header>
-                
+
+                <div class="quick-add-row">
+                    <i data-lucide="plus-circle"></i>
+                    <input type="text" id="quick-add-input" class="quick-add-input" placeholder="Quick add a task and press Enter...">
+                </div>
+
                 <div class="kanban-board">
                     <div class="kanban-column" data-status="todo">
                         <div class="column-header">
@@ -190,10 +284,11 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="task-date">Due Date & Time</label>
+                        <label for="task-date">Due Date & Time <span class="label-optional">(optional)</span></label>
                         <div class="date-input-wrapper">
-                            <input type="datetime-local" id="task-date" required>
+                            <input type="datetime-local" id="task-date">
                             <button type="button" id="set-today-btn" class="btn-secondary btn-sm">Today</button>
+                            <button type="button" id="clear-date-btn" class="btn-secondary btn-sm">Clear</button>
                         </div>
                     </div>
                     <div class="form-group">
@@ -222,6 +317,54 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <div class="priority-group" id="task-priority-group">
+                            <label class="priority-option">
+                                <input type="radio" name="task-priority" value="none" checked>
+                                <span class="priority-chip priority-none">None</span>
+                            </label>
+                            <label class="priority-option">
+                                <input type="radio" name="task-priority" value="low">
+                                <span class="priority-chip priority-low">Low</span>
+                            </label>
+                            <label class="priority-option">
+                                <input type="radio" name="task-priority" value="medium">
+                                <span class="priority-chip priority-medium">Medium</span>
+                            </label>
+                            <label class="priority-option">
+                                <input type="radio" name="task-priority" value="high">
+                                <span class="priority-chip priority-high">High</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-recurrence">Recurrence</label>
+                        <select id="task-recurrence">
+                            <option value="none">None</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="task-tags">Tags <span class="label-optional">(comma-separated)</span></label>
+                    <input type="text" id="task-tags" placeholder="e.g. work, urgent, home">
+                </div>
+                <div class="form-group">
+                    <label>Subtasks</label>
+                    <div class="subtask-add-row">
+                        <input type="text" id="subtask-input" placeholder="Add a subtask and press Enter">
+                        <button type="button" id="add-subtask-btn" class="btn-secondary btn-sm">Add</button>
+                    </div>
+                    <div id="subtask-list" class="subtask-list"></div>
+                </div>
+                <div class="form-group">
+                    <label for="task-notes">Notes</label>
+                    <textarea id="task-notes" rows="3" placeholder="Extra notes, links, or context..."></textarea>
+                </div>
                 <footer class="modal-footer">
                     <button type="button" class="btn-secondary close-modal">Cancel</button>
                     <button type="submit" class="btn-primary">Save Task</button>
@@ -229,6 +372,9 @@
             </form>
         </div>
     </div>
+
+    <!-- Toast container for transient notifications (undo, import/export) -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
     <script src="app.js"></script>
     <script>

@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-001",
+  "type": "refactor",
+  "description": "Establish baseline and extend the data model. Confirm the app runs statically, then extend the task schema with the fields the new features need (priority, tags/labels, subtasks, recurrence, pinned, completedAt, notes) and add a safe one-time migration for existing localStorage data so old tasks keep working. This is the foundation all later features build on. Also harden the app against CDN assets (lucide, Sortable) being unavailable so features degrade gracefully offline.",
+  "status": "completed",
+  "steps": [
+    "Run `node --check app.js` and serve with `python3 -m http.server 8000` to confirm the current app loads and renders the three views without JS errors (baseline).",
+    "In app.js, add a `normalizeTask(task)` helper that returns a task guaranteed to have all new fields with sensible defaults: priority ('none'|'low'|'medium'|'high', default 'none'), tags (array of strings, default []), subtasks (array of {id, title, done:false}, default []), recurrence ('none'|'daily'|'weekly'|'monthly', default 'none'), pinned (boolean, default false), completedAt (ISO string or null, default null), notes (string, default ''). Preserve existing fields (id, title, description, dueDate, color, status, createdAt).",
+    "On load, run all tasks from localStorage through normalizeTask and persist back once (migration), so existing users' data gains the new fields. Do this right after `tasks` is parsed from localStorage.",
+    "Update handleTaskSubmit and any task-creation path so new tasks are created via normalizeTask (or explicitly include all new fields) rather than a bare object literal.",
+    "Guard external-library usage: wrap `lucide.createIcons()` calls in a helper `refreshIcons()` that checks `typeof lucide !== 'undefined'` before calling, and replace direct calls with it. In initSortable(), guard with `if (typeof Sortable === 'undefined') return;` so the board still renders (just without drag) when the CDN is unavailable.",
+    "Add a small set of pure helper functions that later features will reuse: `uid()` for generating ids (reuse Date.now()+random pattern), and keep them near the top of app.js."
+  ],
+  "acceptance_criteria": [
+    "`node --check app.js` exits 0.",
+    "Loading the app with a pre-existing 'aether_tasks' value containing old-shape tasks does not throw, and after load those tasks in localStorage contain the new fields with default values.",
+    "Creating a new task produces an object containing priority, tags, subtasks, recurrence, pinned, completedAt, notes fields.",
+    "With `lucide` and `Sortable` undefined (simulating no CDN), the app still renders all views without throwing (icons simply absent, board static)."
+  ],
+  "verification": [
+    "Run `node --check app.js` and confirm exit code 0.",
+    "Serve with `python3 -m http.server 8000`, open the app, open devtools console, confirm no errors on load and after creating/editing a task.",
+    "In console, run `JSON.parse(localStorage.getItem('aether_tasks'))` and confirm each task has the new fields."
+  ],
+  "blocked_reason": null,
+  "findings": "Implemented in app.js. Added pure helpers near the top: uid() (Date.now base36 + random), refreshIcons() (guards typeof lucide), and normalizeTask() (fills priority='none', tags=[], subtasks=[], recurrence='none', pinned=false, completedAt=null, notes='' while preserving id/title/description/dueDate/color/status/createdAt). On load, tasks parsed from localStorage are mapped through normalizeTask and persisted back once (migration). handleTaskSubmit now routes both create and edit through normalizeTask, spreading the existing task on edit. Replaced both direct lucide.createIcons() calls (init, renderAll) with refreshIcons(); guarded initSortable() with `if (typeof Sortable === 'undefined') return;`. Verified: `NODE_OPTIONS= node --check app.js` exits 0 (NOTE: bare `node --check` fails in this sandbox due to a proxy-bootstrap.js NODE_OPTIONS preload; prefix commands with `NODE_OPTIONS=` to clear it). Simulated migration of old-shape tasks (new fields present, defaults correct, existing fields preserved) and full app load with lucide+Sortable undefined via stubbed DOM; app rendered without throwing. normalizeTask defaults dueDate to '' so existing renderCalendar t.dueDate.startsWith() stays safe. No CSS/HTML changes in this feature."
+}

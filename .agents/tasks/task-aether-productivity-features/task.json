@@ -1,0 +1,7 @@
+{
+  "task_id": "task-aether-productivity-features",
+  "task_description": "Research common to-do/productivity apps (Todoist, TickTick, Things, Microsoft To Do) and add many tight, fully developed features to the Aether Tasks zero-build static app: priorities, tags/labels, subtasks/checklists, recurring tasks, notes, optional due dates, board search/filter/sort, quick add, undo delete, light/dark theme, keyboard shortcuts, JSON export/import, and dashboard analytics/Today focus list. Preserve the zero-build GitHub Pages architecture and existing Dashboard/Kanban/Calendar/modal features. Update README.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
+  "blocked_reason": null
+}

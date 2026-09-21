@@ -1,0 +1,21 @@
+{
+  "project_type": "Zero-build static single-page productivity web app ('Aether Tasks'). Plain HTML/CSS/vanilla JS, deployed via GitHub Pages from main branch root.",
+  "language": "HTML, CSS, vanilla JavaScript (ES6, no modules/bundler)",
+  "build_system": "NONE. Zero-build static site. No package.json, no bundler, no framework. Must stay zero-build so GitHub Pages deploy from main root keeps working.",
+  "test_framework": "None today. No automated tests exist. Verification is manual: serve statically and exercise UI, plus code review of logic.",
+  "build_command": "No build. Static files served as-is.",
+  "test_command": "python3 -m http.server 8000 (serve repo root), then open http://localhost:8000 and manually verify. Also run `node --check app.js` for JS syntax validation.",
+  "verification_instructions": "1) Run `node --check app.js` to confirm no JS syntax errors. 2) Serve with `python3 -m http.server 8000` from repo root. 3) Load http://localhost:8000 and confirm no console errors, all three views render, task CRUD works, localStorage persists under key 'aether_tasks'. Because CDN assets (Lucide, SortableJS, Google Fonts) may not load without network, features must degrade gracefully (guard against Sortable/lucide being undefined).",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "No install step. Clone and serve. python3 available for static server. node available for `node --check` syntax validation.",
+  "environment_constraints": "Sandbox network mode assumed restricted; CDN assets (Lucide icons, SortableJS, Google Fonts) may not load when serving locally. New code MUST guard against `Sortable` and `lucide` being undefined (existing code calls lucide.createIcons() and new Sortable() unconditionally - wrap new usage defensively). Do NOT add a build step or npm dependency. Keep everything vanilla and CDN/localStorage based.",
+  "contribution_requirements": "No CONTRIBUTING.md. Constraints from README + orchestrator: keep zero-build, preserve GitHub Pages deploy, preserve existing dark glassmorphism theme, extend (do not regress) existing Dashboard / Kanban board / Calendar / Task modal features. Bump the ?v= cache-busting query on style.css when CSS changes. Update README.md to document new features.",
+  "key_patterns": "State: global `tasks` array persisted to localStorage key 'aether_tasks' via saveAndRender(). Task shape: {id,title,description,dueDate,color,status('todo'|'doing'|'done'),createdAt}. Rendering: renderAll() dispatches to renderStats/renderDashboard/renderBoard/renderCalendar based on currentView; each fully re-renders its DOM. Modal: openModal(task)/closeModal(), form fields read by id in handleTaskSubmit. Icons via lucide.createIcons() re-run after every render. Global onclick helpers exposed via window.* (e.g. window.openModalById). Drag-drop via SortableJS in initSortable(), onEnd updates status or deletes. CSS uses CSS custom properties in :root, .glass utility class, accent color vars. Cache-bust: style.css?v=1.6.1 in index.html.",
+  "relevant_files": [
+    "index.html - markup, sidebar nav, three view sections, task modal form",
+    "app.js - all state and rendering logic",
+    "style.css - theme, layout, glass effects, responsive breakpoints",
+    "README.md - feature + tech documentation to keep in sync"
+  ],
+  "directory_structure": "Repo root contains index.html, app.js, style.css, README.md, .gitignore. No subdirectories for source. .agents/tasks holds this plan."
+}

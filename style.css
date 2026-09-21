@@ -23,6 +23,41 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Light theme: override the background, text, and glass variables so the whole
+   UI adapts. Accent colors are shared with the dark theme. The class is set on
+   <html> by a blocking head script (and mirrored onto <body> by app.js), so the
+   html.light-theme selectors here take effect before first paint. */
+html.light-theme,
+body.light-theme {
+    --bg-dark: #f4f5fb;
+    --bg-sidebar: #ffffff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #5a5a72;
+
+    --glass-bg: rgba(20, 20, 40, 0.04);
+    --glass-border: rgba(20, 20, 40, 0.12);
+    --glass-shadow: 0 8px 32px 0 rgba(20, 20, 60, 0.12);
+}
+
+/* Inputs use a dark translucent fill by default; soften it in light mode so
+   text stays readable. */
+html.light-theme input,
+html.light-theme textarea,
+html.light-theme select,
+body.light-theme input,
+body.light-theme textarea,
+body.light-theme select {
+    background: rgba(20, 20, 40, 0.04);
+    color: var(--text-primary);
+}
+
+html.light-theme input:focus,
+html.light-theme textarea:focus,
+body.light-theme input:focus,
+body.light-theme textarea:focus {
+    background: rgba(20, 20, 40, 0.07);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -251,13 +286,269 @@ body {
     padding: 2rem 0;
 }
 
+/* Priority + tag context inside minimal task cards and deadline items */
+.task-mini-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+}
+
+.task-mini-meta .priority-badge {
+    margin-bottom: 0;
+}
+
+.task-mini-meta .task-tags {
+    margin-bottom: 0;
+}
+
+/* Dashboard analytics panel */
+.analytics-panel {
+    padding: 1.75rem;
+    margin-bottom: 2rem;
+}
+
+.analytics-panel h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.completion-ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.4rem;
+}
+
+/* Progress ring driven by a --progress custom property (0-100). Uses a
+   conic-gradient fill with a masked inner circle to create the ring. */
+.completion-ring {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(
+        var(--accent-purple) calc(var(--progress) * 1%),
+        rgba(255, 255, 255, 0.08) 0
+    );
+    transition: background 0.4s ease;
+}
+
+.completion-ring::before {
+    content: '';
+    position: absolute;
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    background: var(--bg-dark);
+}
+
+.completion-ring-value {
+    position: relative;
+    font-size: 1.4rem;
+    font-weight: 700;
+    z-index: 1;
+}
+
+.analytics-metric {
+    text-align: center;
+}
+
+.analytics-metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+}
+
+.analytics-caption {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.analytics-subcaption {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.priority-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.priority-breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+}
+
+.priority-breakdown-label {
+    flex: 1;
+    color: var(--text-secondary);
+}
+
+.priority-breakdown-count {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.priority-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-secondary);
+}
+
+.priority-dot.priority-high { background: var(--accent-red); }
+.priority-dot.priority-medium { background: var(--accent-orange); }
+.priority-dot.priority-low { background: var(--accent-blue); }
+.priority-dot.priority-none { background: var(--text-secondary); }
+
+/* Today focus list */
+.today-focus {
+    margin-bottom: 2rem;
+}
+
+.today-focus h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem 1.5rem 0;
+}
+
+/* Priority accent on calendar labels */
+.calendar-task-label.has-priority {
+    box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.55);
+}
+
+/* Board Actions Toolbar (search + filters + sort) */
+.board-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.board-search-wrap {
+    position: relative;
+    flex: 1 1 220px;
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+}
+
+.board-search-wrap i {
+    position: absolute;
+    left: 0.75rem;
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+.board-search-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.75rem 0.65rem 2.5rem;
+    color: white;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.board-search-input:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.board-select {
+    width: auto;
+    flex: 0 1 auto;
+    min-width: 140px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.75rem;
+    color: white;
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.board-select:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Quick Add row (Todoist/Things-style fast capture) */
+.quick-add-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 0.35rem 0.85rem;
+    margin-bottom: 1.25rem;
+    transition: var(--transition);
+}
+
+.quick-add-row:focus-within {
+    border-color: var(--accent-purple);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.quick-add-row i {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-purple);
+    flex-shrink: 0;
+}
+
+.quick-add-input {
+    flex: 1 1 auto;
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0.6rem 0;
+    color: white;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.quick-add-input:focus {
+    outline: none;
+    background: transparent;
+}
+
 /* Kanban Board */
 .kanban-board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
-    height: calc(100vh - 320px);
-    min-height: 400px;
+    height: calc(100vh - 420px);
+    min-height: 360px;
 }
 
 .kanban-column {
@@ -770,6 +1061,190 @@ input:focus, textarea:focus {
     margin-top: 1rem;
 }
 
+.label-optional {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    color: white;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+select option {
+    background: var(--bg-sidebar);
+    color: white;
+}
+
+/* Priority selector (modal) */
+.priority-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.priority-option { cursor: pointer; }
+.priority-option input { display: none; }
+
+.priority-chip {
+    display: inline-block;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    transition: var(--transition);
+}
+
+.priority-option input:checked + .priority-chip {
+    color: var(--text-primary);
+    border-color: transparent;
+}
+
+.priority-option input:checked + .priority-chip.priority-low { background: rgba(59, 130, 246, 0.25); border-color: var(--accent-blue); }
+.priority-option input:checked + .priority-chip.priority-medium { background: rgba(249, 115, 22, 0.25); border-color: var(--accent-orange); }
+.priority-option input:checked + .priority-chip.priority-high { background: rgba(239, 68, 68, 0.25); border-color: var(--accent-red); }
+.priority-option input:checked + .priority-chip.priority-none { background: var(--glass-bg); border-color: var(--glass-border); }
+
+/* Subtasks (modal) */
+.subtask-add-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.subtask-add-row input {
+    flex-grow: 1;
+}
+
+.subtask-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.subtask-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.subtask-row .subtask-check {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: var(--accent-purple);
+    cursor: pointer;
+}
+
+.subtask-row .subtask-title {
+    flex-grow: 1;
+    padding: 0.5rem 0.65rem;
+}
+
+.subtask-row .subtask-remove {
+    flex-shrink: 0;
+    color: var(--accent-red);
+}
+
+.subtask-remove i { width: 16px; height: 16px; }
+
+/* Task card enrichment */
+.task-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.recurrence-indicator {
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.recurrence-indicator i { width: 15px; height: 15px; }
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.priority-badge i { width: 12px; height: 12px; }
+
+.priority-badge.priority-low { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+.priority-badge.priority-medium { background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); }
+.priority-badge.priority-high { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+
+.task-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.tag-chip {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--text-secondary);
+    border: 1px solid var(--glass-border);
+}
+
+.subtask-progress {
+    margin-bottom: 0.75rem;
+}
+
+.subtask-progress-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.subtask-progress-label i { width: 13px; height: 13px; }
+
+.subtask-progress-bar {
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.subtask-progress-bar span {
+    display: block;
+    height: 100%;
+    background: var(--accent-purple);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -935,6 +1410,28 @@ input:focus, textarea:focus {
 
     .task-card-minimal { padding: 0.85rem; }
     .task-card-minimal:hover { transform: none; }
+
+    /* Board toolbar + quick add stack vertically on phones */
+    .board-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+        margin-top: 0.85rem;
+    }
+
+    .board-search-wrap {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .board-select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .quick-add-row {
+        margin-bottom: 1rem;
+    }
 
     /* Kanban Board -> horizontally scrollable, sized to content */
     .kanban-board {
@@ -1193,4 +1690,107 @@ input:focus, textarea:focus {
 
     .main-content { padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
     .board-footer { bottom: calc(54px + env(safe-area-inset-bottom)); }
+}
+
+/* ===================== */
+/* Sidebar tools         */
+/* ===================== */
+.sidebar-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+}
+
+.btn-tool {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-tool:hover {
+    background: var(--glass-bg);
+    color: var(--text-primary);
+}
+
+.btn-tool i {
+    width: 16px;
+    height: 16px;
+}
+
+/* ===================== */
+/* Toast notifications   */
+/* ===================== */
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+    padding: 0 1rem;
+    max-width: 100%;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(12px);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(1rem);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-message {
+    white-space: nowrap;
+}
+
+.toast-action {
+    background: transparent;
+    border: none;
+    color: var(--accent-purple);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.15rem 0.35rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.toast-action:hover {
+    background: rgba(139, 92, 246, 0.12);
+}
+
+/* On light theme, ensure the toast reads well against light content. */
+body.light-theme .toast {
+    background: #ffffff;
 }
