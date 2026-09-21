@@ -33,10 +33,64 @@ function normalizeTask(task) {
     };
 }
 
+// Advance an ISO/datetime-local date string by one recurrence interval.
+// daily = +1 day, weekly = +7 days, monthly = +1 calendar month.
+// Returns a datetime-local style string (YYYY-MM-DDTHH:mm) to match the
+// modal's date input, or '' when there is no base date to advance.
+function advanceDueDate(dateStr, recurrence) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    switch (recurrence) {
+        case 'daily':
+            date.setDate(date.getDate() + 1);
+            break;
+        case 'weekly':
+            date.setDate(date.getDate() + 7);
+            break;
+        case 'monthly':
+            date.setMonth(date.getMonth() + 1);
+            break;
+        default:
+            return dateStr;
+    }
+    // Format back to a local datetime-local string (no timezone shift).
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 16);
+}
+
+// Build the next occurrence of a recurring task once it is completed.
+// Preserves the definition (title/description/color/priority/tags/notes/
+// recurrence) but gets a fresh id, a 'todo' status, a null completedAt, an
+// advanced due date, and all subtasks reset to not-done. When the source has
+// no due date we still spawn the next occurrence with an empty due date so the
+// recurring definition is not lost.
+function buildNextRecurrence(task) {
+    return normalizeTask({
+        ...task,
+        id: uid(),
+        status: 'todo',
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+        dueDate: advanceDueDate(task.dueDate, task.recurrence),
+        subtasks: (task.subtasks || []).map(sub => ({
+            id: uid(),
+            title: sub.title,
+            done: false
+        }))
+    });
+}
+
 // App State
 let tasks = (JSON.parse(localStorage.getItem('aether_tasks')) || []).map(normalizeTask);
 let currentView = 'home';
 let calendarDate = new Date();
+
+// Undo buffer + timer for the most recent deletion(s). Holds the removed
+// task objects so the toast's Undo action can restore them exactly as they were.
+let lastDeleted = null;
+let lastDeletedTimer = null;
+let toastTimer = null;
 
 // Board discovery state: search term, active filters, and sort mode.
 // These narrow which cards render per Kanban column without touching the
@@ -49,6 +103,36 @@ let sortBy = 'dueDate';
 // One-time migration: persist normalized tasks so existing data gains new fields.
 localStorage.setItem('aether_tasks', JSON.stringify(tasks));
 
+// Apply the saved theme immediately (before first render) to avoid a flash of
+// the wrong theme. 'light' switches to the light-theme overrides; anything
+// else keeps the default dark theme.
+function applyTheme(theme) {
+    const isLight = theme === 'light';
+    document.body.classList.toggle('light-theme', isLight);
+    document.body.classList.toggle('dark-theme', !isLight);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', isLight ? '#f4f5fb' : '#0f0f1a');
+}
+applyTheme(localStorage.getItem('aether_theme') || 'dark');
+
+function toggleTheme() {
+    const next = document.body.classList.contains('light-theme') ? 'dark' : 'light';
+    localStorage.setItem('aether_theme', next);
+    applyTheme(next);
+    updateThemeToggleLabel();
+    refreshIcons();
+}
+
+// Keep the theme toggle button's icon/label in sync with the active theme.
+function updateThemeToggleLabel() {
+    const btn = document.getElementById('theme-toggle-btn');
+    if (!btn) return;
+    const isLight = document.body.classList.contains('light-theme');
+    btn.innerHTML = isLight
+        ? '<i data-lucide="moon"></i><span>Dark mode</span>'
+        : '<i data-lucide="sun"></i><span>Light mode</span>';
+}
+
 // DOM Elements
 const views = document.querySelectorAll('.view');
 const navLinks = document.querySelectorAll('.nav-links li');
@@ -60,6 +144,7 @@ const closeModalBtns = document.querySelectorAll('.close-modal');
 // --- Initialization ---
 function init() {
     setupEventListeners();
+    updateThemeToggleLabel();
     renderAll();
     refreshIcons();
 }
@@ -146,6 +231,60 @@ function setupEventListeners() {
         });
     }
 
+    // Theme toggle: flip dark/light and persist.
+    const themeToggle = document.getElementById('theme-toggle-btn');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+
+    // Data export / import controls.
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportTasks);
+    }
+    const importBtn = document.getElementById('import-btn');
+    const importInput = document.getElementById('import-input');
+    if (importBtn && importInput) {
+        importBtn.addEventListener('click', () => importInput.click());
+        importInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            importTasksFromFile(file);
+            // Reset so the same file can be re-imported later.
+            e.target.value = '';
+        });
+    }
+
+    // Keyboard shortcuts: 'n' new task, 'Escape' close modal, '/' focus search.
+    // Ignored while typing in a form field (except Escape, which always works).
+    document.addEventListener('keydown', (e) => {
+        const target = e.target;
+        const typing = target && (
+            target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.tagName === 'SELECT' ||
+            target.isContentEditable
+        );
+
+        if (e.key === 'Escape') {
+            if (taskModal.classList.contains('active')) closeModal();
+            return;
+        }
+
+        if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+
+        if (e.key === 'n' || e.key === 'N') {
+            e.preventDefault();
+            openModal();
+        } else if (e.key === '/') {
+            const boardSearch = document.getElementById('board-search');
+            if (boardSearch) {
+                if (currentView !== 'items') switchView('items');
+                e.preventDefault();
+                boardSearch.focus();
+            }
+        }
+    });
+
     // Calendar Nav
     document.getElementById('prev-month').addEventListener('click', () => {
         calendarDate.setMonth(calendarDate.getMonth() - 1);
@@ -217,9 +356,150 @@ function handleTaskSubmit(e) {
     closeModal();
 }
 
-function deleteTask(id) {
-    tasks = tasks.filter(t => t.id !== id);
+// Change a task's status, handling recurrence regeneration when it transitions
+// into 'done'. Mutates the global tasks array in place (does not save/render).
+// Returns true when a status change actually happened.
+function applyStatusChange(taskId, newStatus) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return false;
+
+    const wasDone = task.status === 'done';
+    task.status = newStatus;
+
+    // Only act on the transition INTO done, never when it was already done.
+    if (newStatus === 'done' && !wasDone) {
+        task.completedAt = new Date().toISOString();
+        if (task.recurrence && task.recurrence !== 'none') {
+            tasks.push(buildNextRecurrence(task));
+        }
+    }
+    return true;
+}
+
+// Remove a task but keep it (and its list index) in the undo buffer, then show
+// an Undo toast. Used by both the trash-drag path and the delete action so a
+// deletion is always recoverable for a short window.
+function removeTaskWithUndo(id) {
+    const index = tasks.findIndex(t => t.id === id);
+    if (index === -1) return;
+
+    const [removed] = tasks.splice(index, 1);
+    lastDeleted = { task: removed, index };
+
+    if (lastDeletedTimer) clearTimeout(lastDeletedTimer);
+    lastDeletedTimer = setTimeout(() => {
+        lastDeleted = null;
+        lastDeletedTimer = null;
+    }, 5000);
+
+    showToast('Task deleted', 'Undo', undoDelete);
     saveAndRender();
+}
+
+// Restore the most recently deleted task to its prior position and state.
+function undoDelete() {
+    if (!lastDeleted) return;
+    const { task, index } = lastDeleted;
+    const insertAt = Math.min(index, tasks.length);
+    tasks.splice(insertAt, 0, task);
+    lastDeleted = null;
+    if (lastDeletedTimer) {
+        clearTimeout(lastDeletedTimer);
+        lastDeletedTimer = null;
+    }
+    saveAndRender();
+}
+
+function deleteTask(id) {
+    removeTaskWithUndo(id);
+}
+
+// --- Toast ---
+// Show a transient toast with an optional action button. The action button is
+// only rendered when both a label and callback are provided.
+function showToast(message, actionLabel, actionFn) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const toast = document.createElement('div');
+    toast.className = 'toast glass';
+
+    const text = document.createElement('span');
+    text.className = 'toast-message';
+    text.innerText = message;
+    toast.appendChild(text);
+
+    if (actionLabel && typeof actionFn === 'function') {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'toast-action';
+        btn.innerText = actionLabel;
+        btn.addEventListener('click', () => {
+            actionFn();
+            hideToast();
+        });
+        toast.appendChild(btn);
+    }
+
+    container.appendChild(toast);
+    // Force reflow so the enter transition plays, then reveal.
+    void toast.offsetWidth;
+    toast.classList.add('visible');
+
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 5000);
+}
+
+function hideToast() {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = container.querySelector('.toast');
+    if (!toast) return;
+    toast.classList.remove('visible');
+    setTimeout(() => {
+        // Only clear if this is still the same toast.
+        if (container.contains(toast)) container.innerHTML = '';
+    }, 300);
+}
+
+// --- Data export / import ---
+// Download the full tasks array as a formatted JSON backup file.
+function exportTasks() {
+    const data = JSON.stringify(tasks, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'aether-tasks-backup.json';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+    showToast('Tasks exported');
+}
+
+// Read a JSON backup file, validate it, and replace the current tasks with the
+// normalized contents. Malformed files show an error toast and leave the
+// existing tasks untouched.
+function importTasksFromFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const parsed = JSON.parse(reader.result);
+            if (!Array.isArray(parsed)) {
+                throw new Error('Backup is not a task array');
+            }
+            tasks = parsed.map(normalizeTask);
+            saveAndRender();
+            showToast('Tasks imported');
+        } catch (err) {
+            showToast('Import failed: invalid file');
+        }
+    };
+    reader.onerror = () => showToast('Import failed: could not read file');
+    reader.readAsText(file);
 }
 
 function openModal(task = null) {
@@ -640,16 +920,11 @@ function initSortable() {
                 const newStatus = toContainer.id.replace('-container', '');
                 
                 if (newStatus === 'delete') {
-                    tasks = tasks.filter(t => t.id !== taskId);
-                } else {
-                    tasks = tasks.map(t => {
-                        if (t.id === taskId) {
-                            return { ...t, status: newStatus };
-                        }
-                        return t;
-                    });
+                    removeTaskWithUndo(taskId);
+                    return;
                 }
-                
+
+                applyStatusChange(taskId, newStatus);
                 saveAndRender();
             }
         });

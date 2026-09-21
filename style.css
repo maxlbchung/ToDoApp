@@ -23,6 +23,34 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Light theme: override the background, text, and glass variables so the whole
+   UI adapts. Accent colors are shared with the dark theme. Applied via
+   body.light-theme before first render to avoid a flash of the wrong theme. */
+body.light-theme {
+    --bg-dark: #f4f5fb;
+    --bg-sidebar: #ffffff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #5a5a72;
+
+    --glass-bg: rgba(20, 20, 40, 0.04);
+    --glass-border: rgba(20, 20, 40, 0.12);
+    --glass-shadow: 0 8px 32px 0 rgba(20, 20, 60, 0.12);
+}
+
+/* Inputs use a dark translucent fill by default; soften it in light mode so
+   text stays readable. */
+body.light-theme input,
+body.light-theme textarea,
+body.light-theme select {
+    background: rgba(20, 20, 40, 0.04);
+    color: var(--text-primary);
+}
+
+body.light-theme input:focus,
+body.light-theme textarea:focus {
+    background: rgba(20, 20, 40, 0.07);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -1503,4 +1531,107 @@ select option {
 
     .main-content { padding-bottom: calc(140px + env(safe-area-inset-bottom)); }
     .board-footer { bottom: calc(54px + env(safe-area-inset-bottom)); }
+}
+
+/* ===================== */
+/* Sidebar tools         */
+/* ===================== */
+.sidebar-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+}
+
+.btn-tool {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-tool:hover {
+    background: var(--glass-bg);
+    color: var(--text-primary);
+}
+
+.btn-tool i {
+    width: 16px;
+    height: 16px;
+}
+
+/* ===================== */
+/* Toast notifications   */
+/* ===================== */
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+    padding: 0 1rem;
+    max-width: 100%;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(12px);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(1rem);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-message {
+    white-space: nowrap;
+}
+
+.toast-action {
+    background: transparent;
+    border: none;
+    color: var(--accent-purple);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.15rem 0.35rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.toast-action:hover {
+    background: rgba(139, 92, 246, 0.12);
+}
+
+/* On light theme, ensure the toast reads well against light content. */
+body.light-theme .toast {
+    background: #ffffff;
 }

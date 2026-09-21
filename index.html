@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0f0f1a">
     <title>Aether Tasks | Productivity Reimagined</title>
     <meta name="description" content="A premium productivity app with Kanban board and Calendar views.">
-    <link rel="stylesheet" href="style.css?v=1.8.0">
+    <link rel="stylesheet" href="style.css?v=1.9.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -40,6 +40,21 @@
                     <i data-lucide="plus"></i>
                     <span>New Task</span>
                 </button>
+                <div class="sidebar-tools">
+                    <button id="theme-toggle-btn" type="button" class="btn-tool" aria-label="Toggle theme">
+                        <i data-lucide="sun"></i>
+                        <span>Light mode</span>
+                    </button>
+                    <button id="export-btn" type="button" class="btn-tool" aria-label="Export tasks">
+                        <i data-lucide="download"></i>
+                        <span>Export</span>
+                    </button>
+                    <button id="import-btn" type="button" class="btn-tool" aria-label="Import tasks">
+                        <i data-lucide="upload"></i>
+                        <span>Import</span>
+                    </button>
+                    <input type="file" id="import-input" accept="application/json,.json" hidden>
+                </div>
             </div>
         </nav>
 
@@ -302,6 +317,9 @@
             </form>
         </div>
     </div>
+
+    <!-- Toast container for transient notifications (undo, import/export) -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
     <script src="app.js"></script>
     <script>
